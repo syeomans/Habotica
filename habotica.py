@@ -4,7 +4,6 @@
 import urllib
 import urllib2
 import json
-#import requests
 import ast
 
 def getUrl(user, url):
