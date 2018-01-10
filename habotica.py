@@ -406,9 +406,9 @@ def sortTasks(user, task_type, sort_type):
 		print("Moving task " + sortedlist[i]['text'])
 		response = moveTask(user, sortedlist[i]["id"], i)
 		# Return status code if not successful
-		if response.status_code != 200:
+		response = json.loads(response)
+		if response['success'] != True:
 			return(response)
-	print("Done")
 
 def cast(user, spellId, targetId = 'none'):
 	"""
