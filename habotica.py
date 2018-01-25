@@ -5,6 +5,7 @@ import urllib
 import urllib2
 import json
 import ast
+#import challenge
 
 def getUrl(user, url):
 	"""
@@ -55,7 +56,7 @@ def postUrl(user, url, payload = {}):
 	else:
 	    # handle the error case. connection.read() will still contain data
 	    # if any was returned, but it probably won't be of any use
-	    print("Something's wrong!!!!!!!!!!!!")
+	    #print("Something's wrong!!!!!!!!!!!!")
 	    data = connection.read()
 	    print(data)
 
@@ -97,7 +98,7 @@ def putUrl(user, url, payload = {}):
 	else:
 	    # handle the error case. connection.read() will still contain data
 	    # if any was returned, but it probably won't be of any use
-	    print("Something's wrong!!!!!!!!!!!!")
+	    #print("Something's wrong!!!!!!!!!!!!")
 	    data = connection.read()
 	    print(data)
 
@@ -139,7 +140,7 @@ def deleteUrl(user, url, payload = {}):
 	else:
 	    # handle the error case. connection.read() will still contain data
 	    # if any was returned, but it probably won't be of any use
-	    print("Something's wrong!!!!!!!!!!!!")
+	    #print("Something's wrong!!!!!!!!!!!!")
 	    data = connection.read()
 	    print(data)
 
