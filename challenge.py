@@ -3,7 +3,7 @@ from habotica import postUrl
 from habotica import putUrl
 from habotica import deleteUrl
 
-def createChallenge(user, groupId, name, shortName, summary = "", description = "", prize = 0, official = False):
+def createChallenge(user, groupId, name, shortName, summary = " ", description = " ", prize = 0, official = False):
 	"""
 	Creates a challenge. Cannot create associated tasks with this route. See createChallengeTasks.
 
@@ -17,7 +17,8 @@ def createChallenge(user, groupId, name, shortName, summary = "", description = 
 	official (optional): Whether or not a challenge is an official Habitica challenge (requires admin). Default value: false
 	"""
 	url = "https://habitica.com/api/v3/challenges"
-	payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
+	#payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
+	payload = {}
 	return(postUrl(user, url, payload))
 
 def deleteChallenge(user, challengeId):
