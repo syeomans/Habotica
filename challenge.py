@@ -2,6 +2,17 @@ from habotica import getUrl
 from habotica import postUrl
 from habotica import putUrl
 from habotica import deleteUrl
+import json
+
+def cloneChallenge(user, challengeId):
+	"""
+	Clone challenge
+
+	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	challengeId: The challenge _id. Type: UUID
+	"""
+	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/clone"
+	return(postUrl(user, url))
 
 def createChallenge(user, groupId, name, shortName, summary = " ", description = " ", prize = 0, official = False):
 	"""
@@ -17,7 +28,27 @@ def createChallenge(user, groupId, name, shortName, summary = " ", description =
 	official (optional): Whether or not a challenge is an official Habitica challenge (requires admin). Default value: false
 	"""
 	url = "https://habitica.com/api/v3/challenges"
-	#payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
+	payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
+	print("\n")
+	print("Payload stage 1:")
+	print(payload)
+	print(type(payload))
+	print("\n")
+
+	payload = json.dumps(payload)
+	print("\n")
+	print("Payload stage 2:")
+	print(payload)
+	print(type(payload))
+	print("\n")
+
+	payload = json.loads(payload)
+	print("\n")
+	print("Payload stage 3:")
+	print(payload)
+	print(type(payload))
+	print("\n")
+
 	payload = {}
 	return(postUrl(user, url, payload))
 
