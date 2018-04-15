@@ -1,24 +1,13 @@
-from habotica import getUrl
-from habotica import postUrl
-from habotica import putUrl
-from habotica import deleteUrl
-import json
+from urlFunctions import getUrl
+from urlFunctions import postUrl
+from urlFunctions import putUrl
+from urlFunctions import deleteUrl
 
-def cloneChallenge(user, challengeId):
-	"""
-	Clone challenge
-
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
-	challengeId: The challenge _id. Type: UUID
-	"""
-	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/clone"
-	return(postUrl(user, url))
-
-def createChallenge(user, groupId, name, shortName, summary = " ", description = " ", prize = 0, official = False):
+def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0, official = False):
 	"""
 	Creates a challenge. Cannot create associated tasks with this route. See createChallengeTasks.
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	groupId: The id of the group to which the challenge belongs. Type: UUID
 	name: String containing the full name of the challenge. Type: String
 	shortName: A shortened name for the challenge, to be used as a tag. Type: String
@@ -28,117 +17,97 @@ def createChallenge(user, groupId, name, shortName, summary = " ", description =
 	official (optional): Whether or not a challenge is an official Habitica challenge (requires admin). Default value: false
 	"""
 	url = "https://habitica.com/api/v3/challenges"
-	payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
-	print("\n")
-	print("Payload stage 1:")
-	print(payload)
-	print(type(payload))
-	print("\n")
-
-	payload = json.dumps(payload)
-	print("\n")
-	print("Payload stage 2:")
-	print(payload)
-	print(type(payload))
-	print("\n")
-
-	payload = json.loads(payload)
-	print("\n")
-	print("Payload stage 3:")
-	print(payload)
-	print(type(payload))
-	print("\n")
-
+	#payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
 	payload = {}
-	return(postUrl(user, url, payload))
+	return(postUrl(url, creds, payload))
 
-def deleteChallenge(user, challengeId):
+def deleteChallenge(creds, challengeId):
 	"""
 	Delete a challenge
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
-	return(deleteUrl(user, url))
+	return(deleteUrl(url, creds))
 
-def exportChallenge(user, challengeId):
+def exportChallenge(creds, challengeId):
 	"""
 	Export a challenge in CSV
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 
 	Returns a csv file. 
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/export/csv"
-	return(getUrl(user, url))
+	return(getUrl(url, creds))
 
-def getChallenge(user, challengeId):
+def getChallenge(creds, challengeId):
 	"""
 	Get a single challenge given its id.
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
-	return(getUrl(user, url))
+	return(getUrl(url, creds))
 
-def getGroupChallenges(user, groupId):
+def getGroupChallenges(creds, groupId):
 	"""
 	Get all challenges for a group
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	groupId: The id of the group to which the challenge belongs. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/groups/" + groupId
-	return(getUrl(user, url))
+	return(getUrl(url, creds))
 
-def getUserChallenges(user):
+def getUserChallenges(creds):
 	"""
 	Get challenges the user has access to. Includes public challenges, challenges belonging to the user's group, and challenges the user has already joined.
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/challenges/user"
-	return(getUrl(user, url))
+	return(getUrl(url, creds))
 
-def joinChallenge(user, challengeId):
+def joinChallenge(creds, challengeId):
 	"""
 	Join a challenge
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/join"
-	return(postUrl(user, url))
+	return(postUrl(url, creds))
 
-def leaveChallenge(user, challengeId):
+def leaveChallenge(creds, challengeId):
 	"""
 	Leave a challenge
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/leave"
-	return(postUrl(user, url))
+	return(postUrl(url, creds))
 
-def selectChallengeWinner(user, challengeId, winnerId):
+def selectChallengeWinner(creds, challengeId, winnerId):
 	"""
 	Select winner for a challenge
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	winnerId: The _id of the winning user. Type: UUID
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/selectWinner/" + winnerId
-	return(postUrl(user, url))
+	return(postUrl(url, creds))
 
-def updateChallenge(user, challengeId, name = "", summary = "", description = "", leader = ""):
+def updateChallenge(creds, challengeId, name = "", summary = "", description = "", leader = ""):
 	"""
 	Update the name, description, or leader of a challenge. User must be challenge leader.
 
-	user: a dictionary formatted as: {'x-api-user': 'your_user_id_here', 'x-api-key': 'your_api_key_here'}
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The challenge _id. Type: UUID
 	name (optional): The new full name of the challenge. Type: String
 	summary (optional): The new challenge summary. Type: String
@@ -157,4 +126,4 @@ def updateChallenge(user, challengeId, name = "", summary = "", description = ""
 	if leader != "":
 		payload["leader"] = leader
 
-	return(putUrl(user, url, payload))
+	return(putUrl(url, creds, payload))
