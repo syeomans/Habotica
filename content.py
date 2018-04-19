@@ -50,3 +50,5 @@ def getContent(contentType=None, language=None):
 		return(getUrl(url)['data'])
 	else:
 		return(getUrl(url)['data'][contentType])
+
+print("Delete this line")
