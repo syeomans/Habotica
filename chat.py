@@ -98,12 +98,14 @@ def markMessagesRead(creds, groupId = 'party'):
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/seen'
 	return(postUrl(url, creds))
 
-def postChatMessage(creds, groupId = 'party'):
+def postChatMessage(creds, message, groupId = 'party'):
 	"""
 	Chat - Post chat message to a group
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	message: The message to post
 	groupId: The group _id (or 'party'). Type: UUID
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat'
-	return(postUrl(url, creds))
+	payload = {"message": message}
+	return(postUrl(url, creds, payload))
