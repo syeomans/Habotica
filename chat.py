@@ -6,7 +6,9 @@ from urlFunctions import deleteUrl
 def clearChatFlags(creds, chatId, groupId = 'party'):
 	"""
 	Resets the flag count on a chat message. Retains the id of the user's that have flagged the message. 
-	(Only visible to moderators)	
+	(Only visible to moderators)
+
+	Permission: Admin	
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	chatId: The chat message id
@@ -17,7 +19,7 @@ def clearChatFlags(creds, chatId, groupId = 'party'):
 
 def deleteChatMessage(creds, chatId, groupId = 'party', previousMsg = None):
 	"""
-	Delete's a chat message from a group
+	Deletes a chat message from a group
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	chatId: The chat message id
@@ -33,9 +35,8 @@ def deleteChatMessage(creds, chatId, groupId = 'party', previousMsg = None):
 
 def flagChatMessage(creds, chatId, groupId = 'party'):
 	"""
-	Chat - Flag a group chat message
-	A message will be hidden from chat if two or more users flag a message. It will be hidden immediately if a moderator flags the message. 
-	An email is sent to the moderators about every flagged message.	
+	Chat - Flag a group chat message. A message will be hidden from chat if two or more users flag a message. It will be hidden immediately 
+	if a moderator flags the message. An email is sent to the moderators about every flagged message.	
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	chatId: The chat message id
@@ -46,19 +47,39 @@ def flagChatMessage(creds, chatId, groupId = 'party'):
 
 def getChat(creds, groupId = 'party'):
 	"""
-	Chat - Get chat messages from a group
-	Fetches an array of messages from a group	
+	Chat - Get chat messages from a group. Fetches an array of messages from a group.	
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	groupId: The group _id (or 'party'). Type: UUID
+
+	return keys: userV, notifications, data, appVersion, success
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat'
 	return(getUrl(url, creds))
 
+def getChatData(creds, groupId = 'party'):
+	"""
+	Chat - Get chat messages from a group. Returns only a list of messages. 
+  
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	groupId: The group _id (or 'party'). Type: UUID
+	"""
+	return(getChat(creds, groupId)["data"])
+
+def getNotifications(creds, groupId = 'party'):
+	"""
+	Chat - Get notifications for a user. 	
+  
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	groupId: The group _id (or 'party'). Type: UUID
+
+	return keys: seen, data, id, type
+	"""
+	return(getChat(creds, groupId)["notifications"])
+
 def likeChatMessage(creds, chatId, groupId = 'party'):
 	"""
-	Chat - Like a group chat message
-	Likes a chat message from a group	
+	Chat - Like a group chat message	
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	chatId: The chat message id
@@ -80,7 +101,6 @@ def markMessagesRead(creds, groupId = 'party'):
 def postChatMessage(creds, groupId = 'party'):
 	"""
 	Chat - Post chat message to a group
-	Posts a chat message to a group	
   
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	groupId: The group _id (or 'party'). Type: UUID
