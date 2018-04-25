@@ -49,7 +49,7 @@ def reorderTag(creds, tagId, position):
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	tagId: the tag_id
-	position: Position the tag is moving to. (type: integer)
+	position: Position the tag is moving to. Index starts at 0. (type: integer)
 	"""
 	url = "https://habitica.com/api/v3/reorder-tags/"
 	payload = {"tagId": tagId, "to": position}
