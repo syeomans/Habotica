@@ -63,7 +63,7 @@ def getGroupChallenges(creds, groupId):
 	url = "https://habitica.com/api/v3/challenges/groups/" + groupId
 	return(getUrl(url, creds))
 
-def getUserChallenges(creds):
+def getChallenges(creds):
 	"""
 	Get challenges the user has access to. Includes public challenges, challenges belonging to the user's group, and challenges the user has already joined.
 

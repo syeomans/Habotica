@@ -4,8 +4,10 @@ import inspect
 
 # Create a user. Contains login credentials of user_id and api_key.
 class user:
-	def __init__(self, user_id, api_key):
-		self.credentials = {'x-api-user': user_id, 'x-api-key': api_key}
+	def __init__(self, userId, apiKey):
+		self.userId = userId
+		self.apiKey = apiKey
+		self.credentials = {'x-api-user': userId, 'x-api-key': apiKey}
 
 # Create a task object from a JSON string containing a task's data
 class task:
