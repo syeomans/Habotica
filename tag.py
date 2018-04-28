@@ -36,7 +36,7 @@ def getTag(creds, tagId):
 
 def getTags(creds):
 	"""
-	Gets user's tags. Returns a list of tag names and IDs. 
+	Gets user's tags. Returns a list of dictionaries of tag names and IDs. 
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
