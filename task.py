@@ -284,3 +284,249 @@ def deleteTask(creds, taskId):
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId
 	return(deleteUrl(url, creds))
+
+def clearCompletedTodos(creds):
+	"""
+	Task - Delete user's completed todos
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/tasks/clearCompletedTodos"
+	return(postUrl(url, creds))
+
+def getChallengeTasks(creds, challengeId):
+	"""
+	Task - Get a challenge's tasks
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	challengeId: The id of the challenge from which to retrieve the tasks
+	"""
+	url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId
+	return(getUrl(url, creds))
+
+def getGroupApprovals(creds, groupId):
+	"""
+	Task - Get a group's approvals
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	groupId: The id of the group from which to retrieve the approvals
+	"""
+	url = "https://habitica.com/api/v3/approvals/group/" + groupId
+	return(getUrl(url, creds))
+
+def getGroupTasks(creds, groupId, taskType = None):
+	"""
+	Task - Get a group's tasks
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	groupId: The id of the group from which to retrieve the approvals
+	taskType(optional): Query parameter to return just a type of tasks
+		Allowed values: "habits", "dailys", "todos", "rewards"
+	"""
+	if taskType == None:
+		url = "https://habitica.com/api/v3/tasks/group/" + groupId
+	else:
+		url = "https://habitica.com/api/v3/tasks/group/" + groupId + "?type=" + taskType
+	return(getUrl(url, creds))
+
+def getTask(creds, taskId):
+	"""
+	Task - Get a task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId
+	return(getUrl(url, creds))
+
+def needsWork(creds, taskId, userId):
+	"""
+	Task - Group task needs more work
+	Mark an assigned group task as needeing more work before it can be approved
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	userId: The id of the assigned user
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/needs-work/" + userId
+	return(postUrl(url, creds))
+
+def moveGroupTask(creds, groupId, taskId, position):
+	"""
+	Task - Move a group task to a specified position
+	Moves a group task to a specified position
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	groupId: The id of the group from which to retrieve the approvals
+	taskId: The task _id or alias
+	position: Where to move the task (-1 means push to bottom). First position is 0
+	"""
+	url = "https://habitica.com/api/v3/group/" + groupId + "/tasks/" + taskId + "/move/to/" + str(position)
+	return(postUrl(url, creds))
+
+def moveTask(creds, taskId, position):
+	"""
+	Task - Move a task to a new position
+	Note: completed To-Dos are not sortable, do not appear in user.tasksOrder.todos, and are ordered by date of 
+	completion.
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	position: Where to move the task (-1 means push to bottom). First position is 0
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/move/to/" + str(position)
+	return(postUrl(url, creds))
+
+def scoreChecklist(creds, taskId, itemId):
+	"""
+	Task - Score a checklist item
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	itemId: The checklist item _id
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist/" + itemId + "/score"
+	return(postUrl(url, creds))
+
+def scoreTask(creds, taskId, direction):
+	"""
+	Task - Score a task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	direction: The direction for scoring the task. Allowed values: "up", "down"
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/score/" + direction
+	return(postUrl(url, creds))
+
+def unassignTask(creds, taskId, assignedUserId):
+	"""
+	Task - Unassign a user from a task
+	Unassigns a user to from a group task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	assignedUserId: The id of the user that will be unassigned from the task
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/unassign/" + assignedUserId
+	return(postUrl(url, creds))
+
+def unlinkTask(creds, taskId, keep):
+	"""
+	Task - Unlink a challenge task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	keep: Specifies if the task should be kept(keep) or removed(remove)
+		Allowed values: 'keep', 'remove'
+	"""
+	url = "https://habitica.com/api/v3/tasks/unlink-one/" + taskId + "?keep=" + keep
+	return(postUrl(url, creds))
+
+def unlinkTasks(creds, challengeId, keep=None):
+	"""
+	Task - Unlink a challenge task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	challengeId: The challenge _id
+	keep (optional): Specifies if tasks should be kept(keep-all) or removed(remove-all) after the unlink 
+		Allowed values: 'keep-all', 'remove-all'
+	"""
+	if keep == None:
+		url = "https://habitica.com/api/v3/tasks/unlink-all/" + challengeId
+	else:
+		url = "https://habitica.com/api/v3/tasks/unlink-all/" + challengeId + "?keep=" + keep
+	return(postUrl(url, creds))
+
+def updateChecklist(creds, taskId, itemId, text):
+	"""
+	Task - Unassign a user from a task
+	Unassigns a user to from a group task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	itemId: The checklist item _id
+	text: The text that will replace the current checkitem text.
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist/" + itemId
+	payload = {"text": text}
+	return(putUrl(url, creds, payload))
+
+def updateTask(creds, taskId, text = None, attribute = None, collapseChecklist = False, notes = None, 
+				date = None, priority = 1, reminders = None, frequency = "weekly", repeat = True, 
+				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
+	"""
+	Task - Unassign a user from a task
+	Unassigns a user to from a group task
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	taskId: The task _id or alias
+	text: String (optional). The text to be displayed for the task
+	attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
+		Allowed values: "str", "int", "per", "con"
+	collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
+		Default value: false
+	notes (optional): String. Extra notes
+	date (optional): String. Due date to be shown in task list. Only valid for type "todo."
+	priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
+		Default value: 1
+		Allowed values: "0.1", "1", "1.5", "2"
+	reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
+		For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
+	frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
+		Only valid for type "daily".
+		Default value: weekly
+		Allowed values: "weekly", "daily"
+	repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
+		Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
+		Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
+		Default value: true
+	everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
+		available again.
+		Default value: 1
+	streak (optional): Number. Number of days that the task has consecutively been checked off. 
+		Only valid for type "daily"
+		Default value: 0
+	startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
+	up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
+		"Good habits."
+		Default value: true
+	down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
+		"Bad habits."
+		Default value: true
+	value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
+		Default value: 0
+	"""
+	url = "https://habitica.com/api/v3/tasks/" + taskId
+	payload = {} 
+	if text != None:
+		payload["text"] = text
+	if attribute != None:
+		payload["attribute"] = attribute
+	if collapseChecklist != False:
+		payload["collapseChecklist"] = collapseChecklist
+	if notes != None:
+		payload["notes"] = notes
+	if date != None:
+		payload["date"] = date
+	if priority != 1:
+		payload["priority"] = priority
+	if reminders != None:
+		payload["reminders"] = reminders
+	if frequency != "weekly":
+		payload["frequency"] = frequency
+	if repeat != True:
+		payload["repeat"] = repeat
+	if everyX != 1:
+		payload["everyX"] = everyX
+	if streak != 0:
+		payload["streak"] = streak
+	if startDate != None:
+		payload["startDate"] = startDate
+	if up != True:
+		payload["up"] = up
+	if down != True:
+		payload["down"] = down
+	if value != 0:
+		payload["value"] = value
+	return(putUrl(url, creds, payload))
