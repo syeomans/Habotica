@@ -206,7 +206,7 @@ def deleteAllMessages(creds):
 	url = "https://habitica.com/api/v3/user/messages"
 	return(deleteUrl(url, creds))
 
-def deleteUser(creds, password, feedback):
+def deleteUser(creds, password, feedback=""):
 	"""
 	Delete an authenticated user's account
 
@@ -227,6 +227,27 @@ def deleteSocialAuthentication(creds, network):
 	"""
 	url = "https://habitica.com/api/v3/user/auth/social/" + network
 	return(deleteUrl(url, creds))
+
+def disableClasses(creds):
+	"""
+	Disable classes
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/disable-classes"
+	return(postUrl(url, creds))
+
+def equip(creds, itemType, key):
+	"""
+	Disable classes
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	itemType: The type of item to equip or unequip
+		Allowed values: "mount", "pet", "costume", "equipped"
+	key: The item to equip or unequip
+	"""
+	url = "https://habitica.com/api/v3/user/equip/" + itemType + "/" + key
+	return(postUrl(url, creds))
 
 
 ### Test ###
