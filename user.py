@@ -249,13 +249,132 @@ def equip(creds, itemType, key):
 	url = "https://habitica.com/api/v3/user/equip/" + itemType + "/" + key
 	return(postUrl(url, creds))
 
+def feed(creds, pet, food):
+	"""
+	User - Feed a pet
 
-### Test ###
-# from content import *
-# print(getContent('special').keys())
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	pet: the string for the pet you want to feed. 
+		To see all pet UUID strings, use the content library: getContent('pets').keys()
+		To see all quest pet UUID strings, use the content library: getContent('premiumPets').keys()
+		To see all special pet UUID strings, use the content library: getContent('specialPets').keys()
+	food: the string for the food you want to feed your pet. 
+		To see all food UUID strings, use the content library: getContent('food').keys()
+	"""
+	url = "https://habitica.com/api/v3/user/feed/" + pet + "/" + food
+	return(postUrl(url, creds))
 
-"""
-['spookySparkles', 'petalFreePotion', 'sand', 'greeting', 'opaquePotion', 
-'shinySeed', 'seafoam', 'valentine', 'thankyou', 'snowball', 'birthday', 
-'congrats', 'goodluck', 'getwell', 'salt', 'nye']
-"""
+def getAnonymizedUserData(creds):
+	"""
+	User - Get anonymized user data
+
+	Returns the user's data without: Authentication information NewMessages/Invitations/Inbox Profile Purchased 
+	information Contributor information Special items Webhooks Notifications
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/anonymized"
+	return(getUrl(url, creds))
+
+def getAuthenticatedProfile(creds, userFields = None):
+	"""
+	User - Get the authenticated user's profile
+
+	The user profile contains data related to the authenticated user including (but not limited to); 
+		Achievements
+		Authentications (including types and timestamps) 
+		Challenges 
+		Flags (including armoire, tutorial, tour etc...) 
+		Guilds History (including timestamps and values) 
+		Inbox 
+		Invitations (to parties/guilds) 
+		Items (character's full inventory)
+		New Messages (flags for groups/guilds that have new messages) 
+		Notifications 
+		Party (includes current quest information) 
+		Preferences (user selected prefs) 
+		Profile (name, photo url, blurb) 
+		Purchased (includes purchase history, gem purchased items, plans) 
+		PushDevices (identifiers for mobile devices authorized) 
+		Stats (standard RPG stats, class, buffs, xp, etc..) 
+		Tags 
+		TasksOrder (list of all ids for dailys, habits, rewards and todos)
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	
+	userFields: A list of comma separated user fields to be returned instead of the entire document. 
+		Notifications are always returned.
+		Example usage: "achievements,items.mounts"
+	"""
+	if userFields == None:
+		url = "https://habitica.com/api/v3/user"
+		return(getUrl(url, creds))
+	else:
+		url = "https://habitica.com/api/v3/user?userFields=" + userFields
+		return(getUrl(url, creds))
+
+def getGearAvailableForPurchase(creds):
+	"""
+	User - Get the gear items available for purchase for the authenticated user
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/inventory/buy"
+	return(getUrl(url, creds))
+
+def getInAppRewards(creds):
+	"""
+	User - Get the in app items appearing in the user's reward column
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/in-app-rewards"
+	return(getUrl(url, creds))
+
+def hatch(creds, egg, hatchingPotion):
+	"""
+	User - Hatch a pet
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	egg: the string for the egg you want to hatch 
+		To see all egg UUID strings, use the content library: getContent('eggs').keys()
+	hatchingPotion: the string for the hatching potion you want to use 
+		To see all hatching potion UUID strings, use the content library: getContent('hatchingPotions').keys()
+	"""
+	url = "https://habitica.com/api/v3/user/hatch/" + egg + "/" + hatchingPotion
+	return(postUrl(url, creds))
+
+def login(creds, username, password):
+	"""
+	User - Login
+
+	Login a user with email / username and password
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	username: Username or email of the user
+	password: The user's password
+	"""
+	url = "https://habitica.com/api/v3/user/auth/local/login"
+	payload = {"username": username, "password": password}
+	return(postUrl(url, creds, payload))
+
+def sleep(creds):
+	"""
+	Make the user start / stop sleeping (resting in the Inn)
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/sleep"
+	return(postUrl(url, creds))
+
+
+
+
+
+
+# Test script
+sam = {'x-api-user': "7c7122d1-17d0-4585-b3b8-31fcb713682e", 'x-api-key': "97f83d3f-a5b7-4903-8a64-03c9f19752e9"}
+#from content import *
+#print(getContent('eggs').keys())
+
+#print(login(sam, 'Wolf', 'Gold'))
