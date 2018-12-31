@@ -6,6 +6,7 @@ from urlFunctions import deleteUrl
 def allocateAttributePoint(creds, stat=None):
 	"""
 	User - Allocate a single attribute point
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	stat: String	Default ='str' Allowed values: "str", "con", "int", "per"
 	"""
@@ -16,7 +17,9 @@ def allocateAttributePoint(creds, stat=None):
 def allocateAllAttributePoints(creds):
 	"""
 	Uses the user's chosen automatic allocation method, or if none, assigns all to STR. 
+	
 	Note: will return success, even if there are 0 points to allocate.
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	stat: String. Default ='str'. Allowed values: "str", "con", "int", "per".
 	"""
@@ -26,6 +29,7 @@ def allocateAllAttributePoints(creds):
 def allocateAttributePoints(creds, INT=None, STR=None, CON=None, PER=None):
 	"""
 	User - Allocate multiple attribute points
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	INT: number of attribute points to allocate to intelligence
 	STR: number of attribute points to allocate to strength
@@ -39,6 +43,7 @@ def allocateAttributePoints(creds, INT=None, STR=None, CON=None, PER=None):
 def blockUnblock(creds, uuid):
 	"""
 	User - Block / unblock a user from sending you a PM
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	uuid: The user id of the user to block / unblock
 	"""
@@ -48,6 +53,7 @@ def blockUnblock(creds, uuid):
 def buyHealthPotion(creds):
 	"""
 	User - Buy a health potion
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/buy-health-potion"
@@ -56,6 +62,7 @@ def buyHealthPotion(creds):
 def buyMysterySet(creds, key):
 	"""
 	Buy a mystery set with a mystic hourglass
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	key: The shorthand date of the mystery set. ex: '201703' is the key for March 2017's mystery item set.
 		To see all current mystery set keys, use the content library: getContent('mystery').keys() 
@@ -73,6 +80,7 @@ def buyMysterySet(creds, key):
 def buyQuest(creds, key):
 	"""
 	Buy a quest with gold
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	key: The shorthand name of the quest. ex: 'atom1' is the questKey of "Attack of the Mundane, part 1."
 		To see all current quest keys, use the content library: getContent('quests').keys() 
@@ -95,6 +103,7 @@ def buyQuest(creds, key):
 def buyArmoire(creds, key):
 	"""
 	Buy an armoire item
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/buy-armoire"
@@ -103,7 +112,9 @@ def buyArmoire(creds, key):
 def buy(creds, key):
 	"""
 	Buy gear, armoire or potion
+	
 	Under the hood uses UserBuyGear, UserBuyPotion and UserBuyArmoire
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	key: the item to buy. To see all current keys, import Content.py and use print(getContent('gear')['flat'].keys())  (there are a lot of them)
 	"""
@@ -113,6 +124,7 @@ def buy(creds, key):
 def buySpecialSpell(creds, key):
 	"""
 	Buy special "spell" item
+	
 	Includes gift cards (e.g., birthday card), and avatar Transformation Items and their antidotes (e.g., Snowball item and Salt reward).
 	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
@@ -129,6 +141,7 @@ def buySpecialSpell(creds, key):
 def cast(user, spellId, targetId = 'none'):
 	"""
 	Cast a skill (spell) on a target
+	
 	spellId: the skill to cast. Takes a string of characters.
 	targetId: Query parameter, necessary if the spell is cast on a party member or task. 
 		Not used if the spell is cast on the user or the user's current party.
@@ -178,6 +191,7 @@ def changeClass(creds, newClass):
 def deleteMessage(creds, messageId):
 	"""
 	Delete a message
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	id: te id of the message to delete
 	"""
@@ -187,6 +201,7 @@ def deleteMessage(creds, messageId):
 def deleteAllMessages(creds):
 	"""
 	Delete all messages
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/messages"
@@ -195,6 +210,7 @@ def deleteAllMessages(creds):
 def deleteUser(creds, password, feedback=""):
 	"""
 	Delete an authenticated user's account
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	password: The user's password if the account uses local authentication
 	feedback: User's optional feedback explaining reasons for deletion
@@ -206,7 +222,10 @@ def deleteUser(creds, password, feedback=""):
 def deleteSocialAuthentication(creds, network):
 	"""
 	Delete social authentication method
-	Remove a social authentication method (only facebook supported) from a user profile. The user must have local authentication enabled
+	
+	Remove a social authentication method (only facebook supported) from a user profile. 
+	The user must have local authentication enabled
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/auth/social/" + network
@@ -215,6 +234,7 @@ def deleteSocialAuthentication(creds, network):
 def disableClasses(creds):
 	"""
 	Disable classes
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/disable-classes"
@@ -223,6 +243,7 @@ def disableClasses(creds):
 def equip(creds, itemType, key):
 	"""
 	Disable classes
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	itemType: The type of item to equip or unequip
 		Allowed values: "mount", "pet", "costume", "equipped"
@@ -234,6 +255,7 @@ def equip(creds, itemType, key):
 def feed(creds, pet, food):
 	"""
 	User - Feed a pet
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	pet: the string for the pet you want to feed. 
 		To see all pet UUID strings, use the content library: getContent('pets').keys()
@@ -248,8 +270,10 @@ def feed(creds, pet, food):
 def getAnonymizedUserData(creds):
 	"""
 	User - Get anonymized user data
+	
 	Returns the user's data without: Authentication information NewMessages/Invitations/Inbox Profile Purchased 
 	information Contributor information Special items Webhooks Notifications
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/anonymized"
@@ -258,6 +282,7 @@ def getAnonymizedUserData(creds):
 def getAuthenticatedProfile(creds, userFields = None):
 	"""
 	User - Get the authenticated user's profile
+	
 	The user profile contains data related to the authenticated user including (but not limited to); 
 		Achievements
 		Authentications (including types and timestamps) 
@@ -277,6 +302,7 @@ def getAuthenticatedProfile(creds, userFields = None):
 		Stats (standard RPG stats, class, buffs, xp, etc..) 
 		Tags 
 		TasksOrder (list of all ids for dailys, habits, rewards and todos)
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	
 	userFields: A list of comma separated user fields to be returned instead of the entire document. 
@@ -293,6 +319,7 @@ def getAuthenticatedProfile(creds, userFields = None):
 def getGearAvailableForPurchase(creds):
 	"""
 	User - Get the gear items available for purchase for the authenticated user
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/inventory/buy"
@@ -301,6 +328,7 @@ def getGearAvailableForPurchase(creds):
 def getInAppRewards(creds):
 	"""
 	User - Get the in app items appearing in the user's reward column
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/in-app-rewards"
@@ -309,6 +337,7 @@ def getInAppRewards(creds):
 def hatch(creds, egg, hatchingPotion):
 	"""
 	User - Hatch a pet
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	egg: the string for the egg you want to hatch 
 		To see all egg UUID strings, use the content library: getContent('eggs').keys()
@@ -322,6 +351,7 @@ def login(creds, username, password):
 	"""
 	User - Login
 	Login a user with email / username and password
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	username: Username or email of the user
 	password: The user's password
@@ -333,13 +363,123 @@ def login(creds, username, password):
 def sleep(creds):
 	"""
 	Make the user start / stop sleeping (resting in the Inn)
+	
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	"""
 	url = "https://habitica.com/api/v3/user/sleep"
 	return(postUrl(url, creds))
 
+def markPMsRead(creds):
+	"""
+	Marks Private Messages as read
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/mark-pms-read"
+	return(postUrl(url, creds))
 
+def movePinnedItem(creds, typ, path, position):
+	"""
+	Move a pinned item in the rewards column to a new position after being sorted
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	type (shortened to typ because reserved words): No idea. It's missing from the docs.
+	path: The unique item path used for pinning (string)
+	position: Where to move the task (number) 
+		0 = top of the list. 
+		-1 = bottom of the list. (-1 means push to bottom). 
+		First position is 0
 
+	Returns an array of the new pinned items in order
+	"""
+	url = "https://habitica.com/api/v3/user/move-pinned-item/" + typ + "/" + path + "/move/to/" + position
+	return(postUrl(url, creds))
+
+def openMysteryBox(creds):
+	"""
+	Open the Mystery Item box
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}	
+	"""
+	url = "https://habitica.com/api/v3/user/open-mystery-item"
+	return(postUrl(url, creds))
+
+def purchaseGemItem(creds, itemType, key):
+	"""
+	Purchase Gem or Gem-purchasable item
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	itemType: Type of item to purchase.
+		Allowed values: "gems", "eggs", "hatchingPotions", "premiumHatchingPotions", ",", ","
+	key: Item's key (use "gem" for purchasing gems)
+	"""
+	url = "https://habitica.com/api/v3/user/purchase/" + itemType + "/" + key
+	return(postUrl(url, creds))
+
+def purchaseHourglassItem(creds, itemType, key):
+	"""
+	Purchase Hourglass-purchasable item
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	itemType: Type of item to purchase.
+		Allowed values: "pets", "mounts"
+	key: Ex: {Phoenix-Base}. The key for the mount/pet
+	"""
+	url = "https://habitica.com/api/v3/user/purchase-hourglass/" + itemType + "/" + key
+	return(postUrl(url, creds))
+
+def readCard(creds, cardType):
+	"""
+	Purchase Hourglass-purchasable item
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	cardType: Type of card to read (e.g. - birthday, greeting, nye, thankyou, valentine)
+	"""
+	url = "https://habitica.com/api/v3/user/read-card/" + cardType
+	return(postUrl(url, creds))
+
+def register(creds, username, email, password, confirmPassword):
+	"""
+	Register a new user with email, login name, and password or attach local auth to a social user
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	username: Login name of the new user. Must be 1-36 characters, containing only a-z, 0-9, hyphens (-), or underscores (_).
+	email: Email address of the new user
+	password: Password for the new user
+	confirmPassword: Password confirmation
+	"""
+	url = "https://habitica.com/api/v4/user/auth/local/register"
+	payload = {"username": username, "email": email, "password": password, "confirmPassword": confirmPassword}
+	return(postUrl(url, creds, payload))
+
+def releaseMounts(creds):
+	"""
+	Release mounts
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/release-mounts"
+	return(postUrl(url, creds))
+
+def releasePetsAndMounts(creds):
+	"""
+	Release pets and mounts and grants Triad Bingo
+	
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/release-both"
+	return(postUrl(url, creds))
+
+def reroll(creds):
+	"""
+	Reroll a user using the Fortify Potion
+
+	Note: User must either have enough gems or be >= lv 100
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/reroll"
+	return(postUrl(url, creds))
 
 
 
@@ -349,4 +489,3 @@ sam = {'x-api-user': "7c7122d1-17d0-4585-b3b8-31fcb713682e", 'x-api-key': "97f83
 #print(getContent('eggs').keys())
 
 #print(login(sam, 'Wolf', 'Gold'))
-#one extra comment
