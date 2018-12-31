@@ -481,6 +481,144 @@ def reroll(creds):
 	url = "https://habitica.com/api/v3/user/reroll"
 	return(postUrl(url, creds))
 
+def resetPasswordSetNew(creds, newPassword, confirmPassword):
+	"""
+	Reset Password Set New one
+
+	Set a new password for a user that reset theirs. Not meant for public usage.
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	newPassword: The new password
+	confirmPassword: Password confirmation
+	"""
+	url = "https://habitica.com/api/v3/user/auth/reset-password-set-new-one"
+	payload ={"newPassword": newPassword, "confirmPassword": confirmPassword}
+	return(postUrl(url, creds, payload))
+
+def resetPassword(creds, email):
+	"""
+	Reset Password Set New one
+
+	Send the user an email to let them reset their password
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	email: The email address of the user
+	"""
+	url = "https://habitica.com/api/v3/user/auth/reset-password"
+	payload ={"email": email}
+	return(postUrl(url, creds, payload))
+
+def resetUser(creds):
+	"""
+	I really don't know what this one does, and I'm afraid to test it. The docs aren't helpful. 
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v4/user/reset"
+	return(postUrl(url, creds))
+
+def revive(creds):
+	"""
+	Revive the user from death
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/revive"
+	return(postUrl(url, creds))
+
+def sellItem(creds, itemType, key):
+	"""
+	Sell a gold-sellable item owned by the user
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	itemType: The type of item to sell.
+		Allowed values: "eggs", "hatchingPotions", "food"
+	key: The key of the item
+	"""
+	url = "https://habitica.com/api/v3/user/sell/" + itemType + "/" + key
+	return(postUrl(url, creds))
+
+def setDayStart(creds, dayStart = 0):
+	"""
+	Set preferences.dayStart for user
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	dayStart: The hour number 0-23 for day to begin. If body is not included, will default to 0.
+		Default value: 0
+	"""
+	url = "https://habitica.com/api/v3/user/custom-day-start"
+	payload = {"dayStart": dayStart}
+	return(postUrl(url, creds, payload))
+
+def togglePinnedItem(creds, key):
+	"""
+	Toggle an item to be pinned
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	key: The key of the item
+	"""
+	url = "https://habitica.com/user/toggle-pinned-item/" + key
+	return(getUrl(url, creds))
+
+def purchaseItem(creds, path):
+	"""
+	Unlock item or set of items by purchase
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	path: Full path to unlock. See "content" API call for list of items.
+	"""
+	url = "https://habitica.com/api/v3/user/unlock?path=" + path
+	return(postUrl(url, creds))
+
+def updateEmail(creds, newEmail, password):
+	"""
+	Change the user email address
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	newEmail: The new email address
+	password: The user password
+	"""
+	url = "https://habitica.com/api/v3/user/auth/update-email"
+	payload = {"newEmail": newEmail, "password": password}
+	return(putUrl(url, creds, payload))
+
+def updateUser(creds, payload):
+	"""
+	Some of the user items can be updated, such as preferences, flags and stats. ^
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	Example payload: 
+		{
+		    "achievements.habitBirthdays": 2,
+		    "profile.name": "MadPink",
+		    "stats.hp": 53,
+		    "flags.warnedLowHealth": false,
+		    "preferences.allocationMode": "flat",
+		    "preferences.hair.bangs": 3
+		}
+	"""
+	url = "https://habitica.com/api/v3/user"
+	return(putUrl(url, creds, payload))
+
+def updateUsername(creds, username):
+	"""
+	Update the username of a local user
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	username: The new username
+	"""
+	url = "https://habitica.com/api/v3/user/auth/update-username"
+	payload = {"username": username}
+	return(putUrl(url, creds, payload))
+
+def orbOfRebirth(creds):
+	"""
+	Use Orb of Rebirth on user
+
+	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	"""
+	url = "https://habitica.com/api/v3/user/rebirth"
+	return(postUrl(url, creds))
 
 
 # Test script
