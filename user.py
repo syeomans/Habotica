@@ -619,11 +619,3 @@ def orbOfRebirth(creds):
 	"""
 	url = "https://habitica.com/api/v3/user/rebirth"
 	return(postUrl(url, creds))
-
-
-# Test script
-sam = {'x-api-user': "7c7122d1-17d0-4585-b3b8-31fcb713682e", 'x-api-key': "97f83d3f-a5b7-4903-8a64-03c9f19752e9"}
-#from content import *
-#print(getContent('eggs').keys())
-
-#print(login(sam, 'Wolf', 'Gold'))
