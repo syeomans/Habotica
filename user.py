@@ -404,7 +404,7 @@ def openMysteryBox(creds):
 	url = "https://habitica.com/api/v3/user/open-mystery-item"
 	return(postUrl(url, creds))
 
-def purchaseGemItem(creds, itemType, key):
+def buyGemItem(creds, itemType, key):
 	"""
 	Purchase Gem or Gem-purchasable item
 	
@@ -416,7 +416,7 @@ def purchaseGemItem(creds, itemType, key):
 	url = "https://habitica.com/api/v3/user/purchase/" + itemType + "/" + key
 	return(postUrl(url, creds))
 
-def purchaseHourglassItem(creds, itemType, key):
+def buyHourglassItem(creds, itemType, key):
 	"""
 	Purchase Hourglass-purchasable item
 	
@@ -560,7 +560,7 @@ def togglePinnedItem(creds, key):
 	url = "https://habitica.com/user/toggle-pinned-item/" + key
 	return(getUrl(url, creds))
 
-def purchaseItem(creds, path):
+def buyItem(creds, path):
 	"""
 	Unlock item or set of items by purchase
 
