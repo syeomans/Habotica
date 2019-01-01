@@ -3,6 +3,19 @@ from urlFunctions import postUrl
 from urlFunctions import putUrl
 from urlFunctions import deleteUrl
 
+def catchKeyError(response, path):
+	"""
+	Not meant for use outside initializing a user class
+
+	Attempts to set a variable based on a path to the data inside a user's authenticated profile. 
+	"""
+	try:
+		outstr = "output = response" + path
+		exec(outstr)
+		return(output)
+	except KeyError:
+		return(None)
+
 class user:
 	"""
 	Class of User objects. 
@@ -10,18 +23,21 @@ class user:
 	All functions in the User section of the API docs are supported as of 12/31/2018
 	"""
 	def __init__(self, userID, apiKey):
+
+		# Properties from User inputs
 		self.userID = userID
 		self.apiKey = apiKey
 		self.credentials = {'x-api-user': self.userID, 'x-api-key': self.apiKey}
 
+		# Properties from authenticated profile
 		response = self.getAuthenticatedProfile()
 		self.authenticatedProfile = response
 		self.userV = response['userV']
 		self.notifications = response['notifications']
 		self.name = response['data']['profile']['name']
-		self.guilds = [response['data']['guilds'] if 'guilds' in response['data'].keys() else None]
-		self.blurb = [response['data']['profile']['blurb'] if 'blurb' in response['data']['profile'].keys() else None]
-		self.challenges = [response['data']['challenges'] if 'challenges' in response['data'].keys() else None]
+		self.guilds = catchKeyError(response, "['data']['guilds']")
+		self.blurb = catchKeyError(response, "['data']['profile']['blurb']") 
+		self.challenges = catchKeyError(response, "['data']['challenges']")
 		self.inbox = response['data']['inbox']
 		self.lastCron = response['data']['lastCron']
 		self.training = response['data']['stats']['training']
@@ -68,22 +84,22 @@ class user:
 		self.loginIncentives = response['data']['loginIncentives']
 		self.hatchingPotions = response['data']['items']['hatchingPotions']
 		self.currentMount = response['data']['items']['currentMount']
-		self.costumeBack = [response['data']['items']['gear']['costume']['back'] if 'back' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeBody = [response['data']['items']['gear']['costume']['body'] if 'body' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeHead = [response['data']['items']['gear']['costume']['head'] if 'head' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeShield = [response['data']['items']['gear']['costume']['shield'] if 'shield' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeArmor = [response['data']['items']['gear']['costume']['armor'] if 'armor' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeWeapon = [response['data']['items']['gear']['costume']['weapon'] if 'weapon' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeHeadAccessory = [response['data']['items']['gear']['costume']['headAccessory'] if 'headAccessory' in response['data']['items']['gear']['costume'].keys() else None]
-		self.costumeEyewear = [response['data']['items']['gear']['costume']['eyewear'] if 'eyewear' in response['data']['items']['gear']['costume'].keys() else None]
-		self.equippedBack = [response['data']['items']['gear']['equipped']['back'] if 'back' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedBody = [response['data']['items']['gear']['equipped']['body'] if 'body' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedHead = [response['data']['items']['gear']['equipped']['head'] if 'head' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedShield = [response['data']['items']['gear']['equipped']['shield'] if 'shield' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedArmor = [response['data']['items']['gear']['equipped']['armor'] if 'armor' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedWeapon = [response['data']['items']['gear']['equipped']['weapon'] if 'weapon' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedHeadAccessory = [response['data']['items']['gear']['equipped']['headAccessory'] if 'headAccessory' in response['data']['items']['gear']['equipped'].keys() else None]
-		self.equippedEyewear = [response['data']['items']['gear']['equipped']['eyewear'] if 'eyewear' in response['data']['items']['gear']['equipped'].keys() else None]
+		self.costumeBack = catchKeyError(response, "['data']['items']['gear']['costume']['back']")
+		self.costumeBody = catchKeyError(response, "['data']['items']['gear']['costume']['body']")
+		self.costumeHead = catchKeyError(response, "['data']['items']['gear']['costume']['head']")
+		self.costumeShield = catchKeyError(response, "['data']['items']['gear']['costume']['shield']")
+		self.costumeArmor = catchKeyError(response, "['data']['items']['gear']['costume']['armor']")
+		self.costumeWeapon = catchKeyError(response, "['data']['items']['gear']['costume']['weapon']")
+		self.costumeHeadAccessory = catchKeyError(response, "['data']['items']['gear']['costume']['headAccessory']")
+		self.costumeEyewear = catchKeyError(response, "['data']['items']['gear']['costume']['eyewear']")
+		self.equippedBack = catchKeyError(response, "['data']['items']['gear']['equipped']['back']")
+		self.equippedBody = catchKeyError(response, "['data']['items']['gear']['equipped']['body']")
+		self.equippedHead = catchKeyError(response, "['data']['items']['gear']['equipped']['head']")
+		self.equippedShield = catchKeyError(response, "['data']['items']['gear']['equipped']['shield']")
+		self.equippedArmor = catchKeyError(response, "['data']['items']['gear']['equipped']['armor']")
+		self.equippedWeapon = catchKeyError(response, "['data']['items']['gear']['equipped']['weapon']")
+		self.equippedHeadAccessory = catchKeyError(response, "['data']['items']['gear']['equipped']['headAccessory']")
+		self.equippedEyewear = catchKeyError(response, "['data']['items']['gear']['equipped']['eyewear']")
 		self.ownedGear = response['data']['items']['gear']['owned'].keys()
 		self.lastDrop = response['data']['items']['lastDrop']
 		self.food = response['data']['items']['food']
