@@ -37,6 +37,52 @@ class challenge:
 		self.dailys = [daily(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
 		self.rewards = [reward(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
 
+		def deleteChallenge(self):
+			"""
+			Delete a challenge
+			"""
+			url = "https://habitica.com/api/v3/challenges/" + self.id
+			return(deleteUrl(url, self.credentials))
+
+		def exportChallenge(self):
+			"""
+			Export a challenge in CSV
+			"""
+			url = "https://habitica.com/api/v3/challenges/" + self.id + "/export/csv"
+			return(getUrl(url, self.credentials))
+
+		def selectChallengeWinner(self, winnerId):
+			"""
+			Select winner for a challenge
+
+			winnerId: The _id of the winning user. Type: UUID
+			"""
+			url = "https://habitica.com/api/v3/challenges/" + self.id + "/selectWinner/" + winnerId
+			return(postUrl(url, self.credentials))
+
+		def updateChallenge(self, name = "", summary = "", description = "", leader = ""):
+			"""
+			Update the name, description, or leader of a challenge. User must be challenge leader.
+
+			name (optional): The new full name of the challenge. Type: String
+			summary (optional): The new challenge summary. Type: String
+			description (optional): The new challenge description. Type: String
+			leader (optional): The UUID of the new challenge leader. Type: String
+			"""
+			url = "https://habitica.com/api/v3/challenges/" + self.id
+			
+			payload = {}
+			if name != "":
+				payload["name"] = name
+			if summary != "":
+				payload["summary"] = summary
+			if description != "":
+				payload["description"] = description
+			if leader != "":
+				payload["leader"] = leader
+
+			return(putUrl(url, self.credentials, payload))
+
 def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0):
 	"""
 	Creates a challenge. Cannot create associated tasks with this route. See createChallengeTasks.
