@@ -1,7 +1,382 @@
-from urlFunctions import getUrl
-from urlFunctions import postUrl
-from urlFunctions import putUrl
-from urlFunctions import deleteUrl
+from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
+
+import user
+
+class task:
+	def __init__(self, user, data):
+		"""
+		Parent class for habit, daily, todo, reward, and completed todo.
+
+		user: A reference to a user object that this task belongs to. All tasks must belong to a user.
+		data: task data returned from an API call
+		"""
+		self.user = user
+		self.data = data
+
+		self.group = data['group']
+		self.tags = data['tags']
+		self.text = data['text']
+		self.challenge = data['challenge']
+		self.userId = data['userId']
+		self.value = data['value']
+		self.id = data['id']
+		self.priority = data['priority']
+		self.notes = data['notes']
+		self.updatedAt = data['updatedAt']
+		self._id = data['_id']
+		self.type = data['type']
+		self.reminders = data['reminders']
+		self.createdAt = data['createdAt']
+
+	def addTag(self, tagId):
+		"""
+		Task - Add a tag to a task
+
+		tagId: The tag id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
+		payload = {"taskId": self.id, "tagId": tagId}
+		response = postUrl(url, self.user.credentials, payload)
+		self.tags.append(tagId)
+		return(response)
+
+	def createChecklist(self, text):
+		"""
+		Task - Add an item to the task's checklist
+
+		TODO: move to children classes that use this
+
+		text: The text of the checklist item
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
+		payload = {"text": text}
+		response = postUrl(url, self.user.credentials, payload)
+		self.checklist.append(text)
+		return(response)
+
+	def deleteChecklist(self, itemId):
+		"""
+		Task - Delete a checklist item from a task
+
+		TODO: move to children classes that use this 
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		response = deleteUrl(url, self.user.credentials)
+		self.checklist.remove(itemId)
+		return(response)
+
+	def removeTag(self, tagId):
+		"""
+		Task - Delete a tag from a task
+
+		tagId: The tag id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
+		response = deleteUrl(url, self.user.credentials)
+		self.tags.remove(tagId)
+		return(response)
+
+	def deleteTask(self):
+		"""
+		Task - Delete a task given its id
+
+		TODO: test
+
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id
+		return(deleteUrl(url, self.user.credentials))
+
+	def scoreChecklist(self, itemId):
+		"""
+		Task - Score a checklist item
+
+		TODO: test
+		TODO: move to children classes that use this
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
+		return(postUrl(url, self.user.credentials))
+
+	def scoreTask(self, direction):
+		"""
+		Task - Score a task
+
+		TODO: test
+		TODO: move to children classes that use this
+
+		direction: The direction for scoring the task. Allowed values: "up", "down"
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
+		return(postUrl(url, self.user.credentials))
+
+	def updateChecklist(self, itemId, text):
+		"""
+		Task - Unassign a user from a task
+		Unassigns a user to from a group task
+
+		TODO: test
+		TODO: move to children classes that use this
+
+		itemId: The checklist item _id
+		text: The text that will replace the current checkitem text.
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		payload = {"text": text}
+		return(putUrl(url, self.user.credentials, payload))
+
+	def updateTask(self, text = None, attribute = None, collapseChecklist = None, notes = None, 
+				date = None, priority = None, reminders = None, frequency = None, repeat = True, 
+				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
+		"""
+		Task - Update a task
+
+		TODO: test
+
+		text: String (optional). The text to be displayed for the task
+		attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
+			Allowed values: "str", "int", "per", "con"
+		collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
+			Default value: false
+		notes (optional): String. Extra notes
+		date (optional): String. Due date to be shown in task list. Only valid for type "todo."
+		priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
+			Default value: 1
+			Allowed values: "0.1", "1", "1.5", "2"
+		reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
+			For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
+		frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
+			Only valid for type "daily".
+			Default value: weekly
+			Allowed values: "weekly", "daily"
+		repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
+			Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
+			Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
+			Default value: true
+		everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
+			available again.
+			Default value: 1
+		streak (optional): Number. Number of days that the task has consecutively been checked off. 
+			Only valid for type "daily"
+			Default value: 0
+		startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
+		up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
+			"Good habits."
+			Default value: true
+		down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
+			"Bad habits."
+			Default value: true
+		value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
+			Default value: 0
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id
+		payload = {} 
+		if text != None:
+			payload["text"] = text
+			self.text = text
+		if attribute != None:
+			payload["attribute"] = attribute
+			self.attribute = attribute
+		if collapseChecklist != None:
+			payload["collapseChecklist"] = collapseChecklist
+			self.collapseChecklist = collapseChecklist
+		if notes != None:
+			payload["notes"] = notes
+			self.notes = notes
+		if date != None:
+			payload["date"] = date
+			self.date = date
+		if priority != None:
+			payload["priority"] = priority
+			self.priority = priority
+		if reminders != None:
+			payload["reminders"] = reminders
+		if frequency != None:
+			payload["frequency"] = frequency
+			self.frequency = frequency
+		if repeat != True:
+			payload["repeat"] = repeat
+			self.repeat = repeat
+		if everyX != 1:
+			payload["everyX"] = everyX
+			self.everyX = everyX
+		if streak != 0:
+			payload["streak"] = streak
+			self.streak = streak
+		if startDate != None:
+			payload["startDate"] = startDate
+			self.startDate = startDate
+		if up != True:
+			payload["up"] = up
+			self.up = up
+		if down != True:
+			payload["down"] = down
+			self.down = down
+		if value != 0:
+			payload["value"] = value
+			self.value = value
+		return(putUrl(url, self.user.credentials, payload))
+
+class habit(task):
+	def __init__(self, user, data):
+		task.__init__(self, user, data)
+		self.frequency = data['frequency']
+		self.history = data['history']
+		self.counterUp = data['counterUp']
+		self.down = data['down']
+		self.counterDown = data['counterDown']
+		self.up = data['up']
+
+	def scoreTask(self, direction):
+		"""
+		Task - Score a task
+
+		TODO: test
+
+		direction: The direction for scoring the task. Allowed values: "up", "down"
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
+		return(postUrl(url, self.user.credentials))
+
+class daily(task):
+	def __init__(self, user, data):
+		task.__init__(self, user, data)
+		self.attribute = data['attribute']
+		self.checklist = data['checklist']
+		self.collapseChecklist = data['collapseChecklist']
+		self.completed = data['completed']
+		self.startDate = data['startDate']
+		self.isDue = data['isDue']
+		self.frequency = data['frequency']
+		self.daysOfMonth = data['daysOfMonth']
+		self.repeat = data['repeat']
+		self.nextDue = data['nextDue']
+		self.weeksOfMonth = data['weeksOfMonth']
+		self.yesterDaily = data['yesterDaily']
+		self.everyX = data['everyX']
+
+	def createChecklist(self, text):
+		"""
+		Task - Add an item to the task's checklist
+
+		text: The text of the checklist item
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
+		payload = {"text": text}
+		response = postUrl(url, self.user.credentials, payload)
+		self.checklist.append(text)
+		return(response)
+
+	def deleteChecklist(self, itemId):
+		"""
+		Task - Delete a checklist item from a task
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		response = deleteUrl(url, self.user.credentials)
+		self.checklist.remove(itemId)
+		return(response)
+
+	def scoreChecklist(self, itemId):
+		"""
+		Task - Score a checklist item
+
+		TODO: test
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
+		return(postUrl(url, self.user.credentials))
+
+	def updateChecklist(self, itemId, text):
+		"""
+		Task - Unassign a user from a task
+		Unassigns a user to from a group task
+
+		TODO: test
+
+		itemId: The checklist item _id
+		text: The text that will replace the current checkitem text.
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		payload = {"text": text}
+		return(putUrl(url, self.user.credentials, payload))
+
+class todo(task):
+	def __init__(self, user, data):
+		task.__init__(self, user, data)
+		self.checklist = data['checklist']
+		self.collapseChecklist = data['collapseChecklist']
+		self.completed = data['completed']
+
+	def createChecklist(self, text):
+		"""
+		Task - Add an item to the task's checklist
+
+		text: The text of the checklist item
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
+		payload = {"text": text}
+		response = postUrl(url, self.user.credentials, payload)
+		self.checklist.append(text)
+		return(response)
+
+	def deleteChecklist(self, itemId):
+		"""
+		Task - Delete a checklist item from a task
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		response = deleteUrl(url, self.user.credentials)
+		self.checklist.remove(itemId)
+		return(response)
+
+	def scoreChecklist(self, itemId):
+		"""
+		Task - Score a checklist item
+
+		TODO: test
+
+		itemId: The checklist item _id
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
+		return(postUrl(url, self.user.credentials))
+
+	def updateChecklist(self, itemId, text):
+		"""
+		Task - Unassign a user from a task
+		Unassigns a user to from a group task
+
+		TODO: test
+
+		itemId: The checklist item _id
+		text: The text that will replace the current checkitem text.
+		"""
+		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
+		payload = {"text": text}
+		return(putUrl(url, self.user.credentials, payload))
+
+class reward(task):
+	def __init__(self, user, data):
+		task.__init__(self, user, data)
+
+class completedTodo(task):
+	def __init__(self, user, data):
+		task.__init__(self, user, data)
+		self.checklist = data['checklist']
+		self.collapseChecklist = data['collapseChecklist']
+		self.completed = data['completed']
+		self.dateCompleted = data['dateCompleted']
+
+
+
+#Functions######################################################################################
+
+
 
 def addTag(creds, taskId, tagId):
 	"""
@@ -456,8 +831,7 @@ def updateTask(creds, taskId, text = None, attribute = None, collapseChecklist =
 				date = None, priority = 1, reminders = None, frequency = "weekly", repeat = True, 
 				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
 	"""
-	Task - Unassign a user from a task
-	Unassigns a user to from a group task
+	Task - Update a task
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	taskId: The task _id or alias

@@ -1,7 +1,6 @@
-from urlFunctions import getUrl
-from urlFunctions import postUrl
-from urlFunctions import putUrl
-from urlFunctions import deleteUrl
+from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
+from task import task, habit, daily, todo, reward, completedTodo
+import task
 
 def catchKeyError(response, path):
 	"""
@@ -24,12 +23,12 @@ class user:
 	"""
 	def __init__(self, userID, apiKey):
 
-		# Properties from User inputs
+		#### Properties from User inputs
 		self.userID = userID
 		self.apiKey = apiKey
 		self.credentials = {'x-api-user': self.userID, 'x-api-key': self.apiKey}
 
-		# Properties from authenticated profile
+		### Properties from authenticated profile
 		response = self.getAuthenticatedProfile()
 		self.authenticatedProfile = response
 		self.userV = response['userV']
@@ -115,6 +114,87 @@ class user:
 		self.balance = response['data']['balance']
 		self.todosHistory = response['data']['history']['todos']
 		self.expHistory = response['data']['history']['exp']
+
+		### Setting up the user's task lists is tricky because we want this to be done with as few
+		### API calls as possible. The getTasks() function gets all of the data in one call, but 
+		### the data is returned unsorted. We need to then sort each data point into one of 4 task 
+		### lists at the correct index. 
+		### Note: This is so ugly and I'm so sorry, but this mess took the execution time of creating  
+		### user objects down from 6 seconds to 3 seconds on my machine. 
+
+		# Get the user's tasks. (This contains all data on all tasks, but is unsorted)
+		tasks = self.getTasks()['data']
+
+		# Get the order the tasks should be in. These are lists of uuid's.
+		habitOrder =  response['data']['tasksOrder']['habits']
+		dailyOrder =  response['data']['tasksOrder']['dailys']
+		todoOrder =  response['data']['tasksOrder']['todos']
+		rewardOrder =  response['data']['tasksOrder']['rewards']
+		
+		# Initialize task lists and fill with null values. These will be filled later.
+		self.habits = [None for i in range(0,len(habitOrder))]
+		self.dailys = [None for i in range(0,len(dailyOrder))]
+		self.todos = [None for i in range(0,len(todoOrder))]
+		self.rewards = [None for i in range(0,len(rewardOrder))]
+
+		# Go through the unsorted task list. Sort each task into the correct list and index.
+		for thisTask in tasks:
+			thisType = thisTask['type']
+			thisId = thisTask['id']
+			# Sort into habit list 
+			if thisType == 'habit':
+				index = 0
+				# Find the correct index
+				for uuid in habitOrder:
+					if uuid == thisId:
+						# Sort into correct index in correct list
+						self.habits[index] = thisTask
+						break
+					# Post-increment
+					index += 1
+			# Sort into daily list 
+			elif thisType == 'daily':
+				index = 0
+				# Find the correct index
+				for uuid in dailyOrder:
+					if uuid == thisId:
+						# Sort into correct index in correct list
+						self.dailys[index] = thisTask
+						break
+					# Post-increment
+					index += 1
+			# Sort into todo list 
+			elif thisType == 'todo':
+				index = 0
+				# Find the correct index
+				for uuid in todoOrder:
+					if uuid == thisId:
+						# Sort into correct index in correct list
+						self.todos[index] = thisTask
+						break
+					# Post-increment
+					index += 1
+			# Sort into reward list 
+			elif thisType == 'reward':
+				index = 0
+				# Find the correct index
+				for uuid in rewardOrder:
+					if uuid == thisId:
+						# Sort into correct index in correct list
+						self.rewards[index] = thisTask
+						break
+					# Post-increment
+					index += 1
+
+		# Remove any ghost tasks that may have been picked up. I have no idea what these are, but they
+		# definitely exist and I now believe in ghosts. 
+		for i in self.habits:
+			if i == None: 
+				self.habits.remove(i)
+		
+		# I don't have a way of putting completed todos in order, so marvel at the single line!
+		self.completedTodos = [completedTodo(self, i) for i in self.getTasks('completedTodos')['data']]
+		# (I know, right?  I could have done the rest of them in one line too if it weren't so slow.)
 
 	def allocateAttributePoint(self, stat=None):
 		"""
@@ -686,3 +766,29 @@ class user:
 		"""
 		url = "https://habitica.com/api/v3/user/rebirth"
 		return(postUrl(url, self.credentials))
+
+	def getTasks(self, taskType = None):
+		"""
+		Task - Get a user's tasks
+
+		taskType: one of ['habits', 'dailys', 'todos', 'rewards', 'completedTodos'] (optional)
+
+		The returned dictionaries' structure depends on the type of task. Keys defined below:
+
+		todos keys: attribute, checklist, group, collapseChecklist, tags, text, challenge, userId, value, 
+			id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
+		dailys keys: streak, startDate, isDue, attribute, userId, frequency, updatedAt, id, createdAt, 
+			daysOfMonth, group, collapseChecklist, priority, text, type, repeat, tags, checklist, completed, 
+			nextDue, weeksOfMonth, yesterDaily, challenge, reminders, everyX, value, _id, notes, history
+		habits keys: attribute, counterUp, group, tags, down, text, challenge, counterDown, userId, up, 
+			value, id, priority, frequency, notes, updatedAt, _id, type, reminders, createdAt, history
+		rewards keys: attribute, group, tags, text, challenge, userId, value, id, priority, notes, updatedAt, 
+			_id, type, reminders, createdAt
+		completedTodos keys: attribute, dateCompleted, checklist, group, collapseChecklist, tags, text, 
+			challenge, userId, value, id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
+		"""
+		if taskType == None:
+			url = "https://habitica.com/api/v3/tasks/user"
+		else:
+			url = "https://habitica.com/api/v3/tasks/user?type=" + taskType
+		return(getUrl(url, self.credentials))

@@ -1,7 +1,4 @@
-from urlFunctions import getUrl
-from urlFunctions import postUrl
-from urlFunctions import putUrl
-from urlFunctions import deleteUrl
+from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 
 def createTag(creds, name):
 	"""
