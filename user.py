@@ -72,7 +72,6 @@ class user:
 		self.needsCron = response['data']['needsCron']
 		self.achievements = response['data']['achievements']
 		self.pinnedItemsOrder = response['data']['pinnedItemsOrder']
-		self.tags = response['data']['tags']
 		self.invitations = response['data']['invitations']
 		self.unpinnedItems = response['data']['unpinnedItems']
 		self.lastLogin = response['data']['auth']['timestamps']['loggedin']
@@ -114,6 +113,11 @@ class user:
 		self.balance = response['data']['balance']
 		self.todosHistory = response['data']['history']['todos']
 		self.expHistory = response['data']['history']['exp']
+
+		### These tag dictionaries are more user-friendly than the raw response
+		self.tags = response['data']['tags'] # raw response
+		self.tagIdToNameDict = {i['id']:i['name'] for i in response['data']['tags']}
+		self.tagNameToIdDict = {i['name']:i['id'] for i in response['data']['tags']}
 
 		### Setting up the user's task lists is tricky because we want this to be done with as few
 		### API calls as possible. The getTasks() function gets all of the data in one call, but 
