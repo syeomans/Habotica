@@ -12,12 +12,11 @@ class task:
 		"""
 		self.user = user
 		self.data = data
-
 		self.group = data['group']
 		self.tags = data['tags']
 		self.text = data['text']
 		self.challenge = data['challenge']
-		self.userId = data['userId']
+		self.userId = [data['userId'] if 'userId' in data.keys() else None]
 		self.value = data['value']
 		self.id = data['id']
 		self.priority = data['priority']
@@ -669,14 +668,19 @@ def clearCompletedTodos(creds):
 	url = "https://habitica.com/api/v3/tasks/clearCompletedTodos"
 	return(postUrl(url, creds))
 
-def getChallengeTasks(creds, challengeId):
+def getChallengeTasks(creds, challengeId, taskType = None):
 	"""
 	Task - Get a challenge's tasks
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	challengeId: The id of the challenge from which to retrieve the tasks
+	taskType (optional)	Query parameter to return just a type of tasks
+		Allowed values: "habits", "dailys", "todos", "rewards"
 	"""
-	url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId
+	if taskType == None:
+		url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId
+	else:
+		url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId + "?type=" + taskType
 	return(getUrl(url, creds))
 
 def getGroupApprovals(creds, groupId):

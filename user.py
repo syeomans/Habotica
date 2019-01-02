@@ -1,5 +1,5 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
-from task import task, habit, daily, todo, reward, completedTodo
+from task import task, habit, daily, todo, reward, completedTodo, getTasks
 import task
 
 def catchKeyError(response, path):
@@ -53,7 +53,7 @@ class user:
 		self.lvl = response['data']['stats']['lvl']
 		self.toNextLevel = response['data']['stats']['toNextLevel']
 		self.buffs = response['data']['stats']['buffs']
-		self.habiticaClass = response['data']['stats']['class']
+		self._class = response['data']['stats']['class']
 		self.points = response['data']['stats']['points']
 		self.asleep = response['data']['preferences']['sleep']
 		self.wearingCostume = response['data']['preferences']['costume']
@@ -113,6 +113,8 @@ class user:
 		self.balance = response['data']['balance']
 		self.todosHistory = response['data']['history']['todos']
 		self.expHistory = response['data']['history']['exp']
+		self.party = catchKeyError(response, "['data']['party']")
+		self.partyId = catchKeyError(response, "['data']['party']['_id']")
 
 		### These tag dictionaries are more user-friendly than the raw response
 		self.tags = response['data']['tags'] # raw response
@@ -127,7 +129,7 @@ class user:
 		### user objects down from 6 seconds to 3 seconds on my machine. 
 
 		# Get the user's tasks. (This contains all data on all tasks, but is unsorted)
-		tasks = self.getTasks()['data']
+		tasks = getTasks(self.credentials)['data']
 
 		# Get the order the tasks should be in. These are lists of uuid's.
 		habitOrder =  response['data']['tasksOrder']['habits']
@@ -197,7 +199,7 @@ class user:
 				self.habits.remove(i)
 		
 		# I don't have a way of putting completed todos in order, so marvel at the single line!
-		self.completedTodos = [completedTodo(self, i) for i in self.getTasks('completedTodos')['data']]
+		self.completedTodos = [completedTodo(self, i) for i in getTasks(self.credentials, 'completedTodos')['data']]
 		# (I know, right?  I could have done the rest of them in one line too if it weren't so slow.)
 
 	def allocateAttributePoint(self, stat=None):
@@ -770,29 +772,3 @@ class user:
 		"""
 		url = "https://habitica.com/api/v3/user/rebirth"
 		return(postUrl(url, self.credentials))
-
-	def getTasks(self, taskType = None):
-		"""
-		Task - Get a user's tasks
-
-		taskType: one of ['habits', 'dailys', 'todos', 'rewards', 'completedTodos'] (optional)
-
-		The returned dictionaries' structure depends on the type of task. Keys defined below:
-
-		todos keys: attribute, checklist, group, collapseChecklist, tags, text, challenge, userId, value, 
-			id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
-		dailys keys: streak, startDate, isDue, attribute, userId, frequency, updatedAt, id, createdAt, 
-			daysOfMonth, group, collapseChecklist, priority, text, type, repeat, tags, checklist, completed, 
-			nextDue, weeksOfMonth, yesterDaily, challenge, reminders, everyX, value, _id, notes, history
-		habits keys: attribute, counterUp, group, tags, down, text, challenge, counterDown, userId, up, 
-			value, id, priority, frequency, notes, updatedAt, _id, type, reminders, createdAt, history
-		rewards keys: attribute, group, tags, text, challenge, userId, value, id, priority, notes, updatedAt, 
-			_id, type, reminders, createdAt
-		completedTodos keys: attribute, dateCompleted, checklist, group, collapseChecklist, tags, text, 
-			challenge, userId, value, id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
-		"""
-		if taskType == None:
-			url = "https://habitica.com/api/v3/tasks/user"
-		else:
-			url = "https://habitica.com/api/v3/tasks/user?type=" + taskType
-		return(getUrl(url, self.credentials))

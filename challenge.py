@@ -1,11 +1,47 @@
-from urlFunctions import getUrl
-from urlFunctions import postUrl
-from urlFunctions import putUrl
-from urlFunctions import deleteUrl
+from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
+from task import createChallengeTask, getChallengeTasks, habit, daily, todo, reward
 
-def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0, official = False):
+def catchKeyError(response, path):
+	"""
+	Not meant for use outside initializing a user class
+
+	Attempts to set a variable based on a path to the data inside a user's authenticated profile. 
+	"""
+	try:
+		outstr = "output = response" + path
+		exec(outstr)
+		return(output)
+	except KeyError:
+		return(None)
+
+class challenge:
+	def __init__(self, data, credentials={}):
+		self.credentials = credentials
+		self.group = catchKeyError(data, "['group']")
+		self.prize = catchKeyError(data, "['prize']")
+		self.memberCount = catchKeyError(data, "['memberCount']")
+		self.description = catchKeyError(data, "['description']")
+		self.official = catchKeyError(data, "['official']")
+		self.summary = catchKeyError(data, "['summary']")
+		self.tasksOrder = catchKeyError(data, "['tasksOrder']")
+		self.createdAt = catchKeyError(data, "['createdAt']")
+		self.updatedAt = catchKeyError(data, "['updatedAt']")
+		self.id = catchKeyError(data, "['id']")
+		self.shortName = catchKeyError(data, "['shortName']")
+		self._id = catchKeyError(data, "['_id']")
+		self.leader = catchKeyError(data, "['leader']")
+		self.categories = catchKeyError(data, "['categories']")
+		self.name = catchKeyError(data, "['name']")
+		self.todos = [todo(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'todos')['data']]
+		self.habits = [habit(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'habits')['data']]
+		self.dailys = [daily(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
+		self.rewards = [reward(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
+
+def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0):
 	"""
 	Creates a challenge. Cannot create associated tasks with this route. See createChallengeTasks.
+
+	Note: I'm not an admin, so I can't support creating official challenges.
 
 	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
 	groupId: The id of the group to which the challenge belongs. Type: UUID
@@ -17,8 +53,7 @@ def createChallenge(creds, groupId, name, shortName, summary = " ", description 
 	official (optional): Whether or not a challenge is an official Habitica challenge (requires admin). Default value: false
 	"""
 	url = "https://habitica.com/api/v3/challenges"
-	#payload = {'challenge': {'groupId': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}, 'official': official}
-	payload = {}
+	payload = {'group': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}
 	return(postUrl(url, creds, payload))
 
 def deleteChallenge(creds, challengeId):
@@ -127,3 +162,4 @@ def updateChallenge(creds, challengeId, name = "", summary = "", description = "
 		payload["leader"] = leader
 
 	return(putUrl(url, creds, payload))
+

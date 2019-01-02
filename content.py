@@ -1,5 +1,28 @@
 from urlFunctions import getUrl
 
+class content:
+	"""
+	Get all contents on Habitica 
+
+	Note: Some content is nested under the below properties and may need to be indexed to access.
+
+	Properties:
+	'specialPets', 'premiumPets', 'backgroundsFlat', 'questMounts', 'armoire', 'timeTravelStable', 
+	'questPets', 'special', 'spells', 'hatchingPotions', 'officialPinnedItems', 'questEggs', 
+	'bundles', 'premiumMounts', 'premiumHatchingPotions', 'userDefaults', 'itemList', 'pets',
+	'questsByLevel', 'userDefaultsMobile', 'appearances', 'dropEggs', 'achievements', 'gearTypes',
+	'potion', 'gear', 'food', 'eggs', 'faq', 'mystery', 'audioThemes', 'petInfo', 
+	'loginIncentives', 'mountInfo', 'backgrounds', 'specialMounts', 'dropHatchingPotions',
+	'userCanOwnQuestCategories', 'classes', ucardTypes', 'quests', umounts', 'subscriptionBlocks'
+	"""
+	def __init__(self, language=None):
+		data = getContent(language=None)
+
+		self.contentTypes = data.keys()
+		for key in data.keys():
+			exStr = "self." + key + " = data['" + key + "']"
+			exec(exStr)
+
 def getContent(contentType=None, language=None):
 	"""
 	Get all available content objects
@@ -50,3 +73,4 @@ def getContent(contentType=None, language=None):
 		return(getUrl(url)['data'])
 	else:
 		return(getUrl(url)['data'][contentType])
+
