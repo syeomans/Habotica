@@ -1,6 +1,6 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 from task import task, habit, daily, todo, reward, completedTodo, getTasks
-import task
+from chat import chat, getChat
 
 def catchKeyError(response, path):
 	"""
@@ -21,15 +21,16 @@ class user:
 
 	All functions in the User section of the API docs are supported as of 12/31/2018
 	"""
-	def __init__(self, userID, apiKey):
+	def __init__(self, userId, apiKey):
 
 		#### Properties from User inputs
-		self.userID = userID
+		self.userId = userId
 		self.apiKey = apiKey
-		self.credentials = {'x-api-user': self.userID, 'x-api-key': self.apiKey}
+		self.credentials = {'x-api-user': self.userId, 'x-api-key': self.apiKey}
 
 		### Properties from authenticated profile
 		response = self.getAuthenticatedProfile()
+		self._id = response['data']['_id']
 		self.authenticatedProfile = response
 		self.userV = response['userV']
 		self.notifications = response['notifications']
@@ -115,12 +116,26 @@ class user:
 		self.expHistory = response['data']['history']['exp']
 		self.party = catchKeyError(response, "['data']['party']")
 		self.partyId = catchKeyError(response, "['data']['party']['_id']")
+		self.habitOrder =  response['data']['tasksOrder']['habits']
+		self.dailyOrder =  response['data']['tasksOrder']['dailys']
+		self.todoOrder =  response['data']['tasksOrder']['todos']
+		self.rewardOrder =  response['data']['tasksOrder']['rewards']
 
 		### These tag dictionaries are more user-friendly than the raw response
 		self.tags = response['data']['tags'] # raw response
 		self.tagIdToNameDict = {i['id']:i['name'] for i in response['data']['tags']}
 		self.tagNameToIdDict = {i['name']:i['id'] for i in response['data']['tags']}
 
+		### These attributes need to be initialized before use
+		self.habits = None
+		self.dailys = None
+		self.todos = None
+		self.rewards = None
+		self.completedTodos = None
+		self.partyChat = None
+		self.guildChats = None
+
+	def initTasks(self):
 		### Setting up the user's task lists is tricky because we want this to be done with as few
 		### API calls as possible. The getTasks() function gets all of the data in one call, but 
 		### the data is returned unsorted. We need to then sort each data point into one of 4 task 
@@ -130,18 +145,12 @@ class user:
 
 		# Get the user's tasks. (This contains all data on all tasks, but is unsorted)
 		tasks = getTasks(self.credentials)['data']
-
-		# Get the order the tasks should be in. These are lists of uuid's.
-		habitOrder =  response['data']['tasksOrder']['habits']
-		dailyOrder =  response['data']['tasksOrder']['dailys']
-		todoOrder =  response['data']['tasksOrder']['todos']
-		rewardOrder =  response['data']['tasksOrder']['rewards']
 		
 		# Initialize task lists and fill with null values. These will be filled later.
-		self.habits = [None for i in range(0,len(habitOrder))]
-		self.dailys = [None for i in range(0,len(dailyOrder))]
-		self.todos = [None for i in range(0,len(todoOrder))]
-		self.rewards = [None for i in range(0,len(rewardOrder))]
+		self.habits = [None for i in range(0,len(self.habitOrder))]
+		self.dailys = [None for i in range(0,len(self.dailyOrder))]
+		self.todos = [None for i in range(0,len(self.todoOrder))]
+		self.rewards = [None for i in range(0,len(self.rewardOrder))]
 
 		# Go through the unsorted task list. Sort each task into the correct list and index.
 		for thisTask in tasks:
@@ -151,10 +160,10 @@ class user:
 			if thisType == 'habit':
 				index = 0
 				# Find the correct index
-				for uuid in habitOrder:
+				for uuid in self.habitOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.habits[index] = thisTask
+						self.habits[index] = habit(self, thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -162,10 +171,10 @@ class user:
 			elif thisType == 'daily':
 				index = 0
 				# Find the correct index
-				for uuid in dailyOrder:
+				for uuid in self.dailyOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.dailys[index] = thisTask
+						self.dailys[index] = daily(self, thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -173,10 +182,10 @@ class user:
 			elif thisType == 'todo':
 				index = 0
 				# Find the correct index
-				for uuid in todoOrder:
+				for uuid in self.todoOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.todos[index] = thisTask
+						self.todos[index] = todo(self, thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -184,10 +193,10 @@ class user:
 			elif thisType == 'reward':
 				index = 0
 				# Find the correct index
-				for uuid in rewardOrder:
+				for uuid in self.rewardOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.rewards[index] = thisTask
+						self.rewards[index] = reward(self, thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -201,6 +210,16 @@ class user:
 		# I don't have a way of putting completed todos in order, so marvel at the single line!
 		self.completedTodos = [completedTodo(self, i) for i in getTasks(self.credentials, 'completedTodos')['data']]
 		# (I know, right?  I could have done the rest of them in one line too if it weren't so slow.)
+
+	def initPartyChat(self):
+		self.partyChat = chat(self, getChat(self.credentials)['data'])
+
+	def initGuildChats(self):
+		# self.guildChats = {chat(self, getChat(self.credentials, guildId)['data'], guildId) for guildId in self.guilds}
+		self.guildChats = {}
+		for guildId in self.guilds:
+			data = getChat(self.credentials, guildId)['data']
+			self.guildChats[guildId] = chat(self, data, guildId)
 
 	def allocateAttributePoint(self, stat=None):
 		"""
@@ -306,7 +325,9 @@ class user:
 		
 		Under the hood uses UserBuyGear, UserBuyPotion and UserBuyArmoire
 		
-		key: the item to buy. To see all current keys, import Content.py and use print(getContent('gear')['flat'].keys())  (there are a lot of them)
+		key: the item to buy. 
+			To see all current keys, import Content.py and use print(getContent('gear')['flat'].keys())  
+			(there are a lot of them)
 		"""
 		url = "https://habitica.com/api/v3/user/buy/" + str(key)
 		return(postUrl(url, self.credentials))
@@ -315,9 +336,11 @@ class user:
 		"""
 		Buy special "spell" item
 		
-		Includes gift cards (e.g., birthday card), and avatar Transformation Items and their antidotes (e.g., Snowball item and Salt reward).
+		Includes gift cards (e.g., birthday card), and avatar Transformation Items and their antidotes 
+		(e.g., Snowball item and Salt reward).
 		
-		key: The special item to buy. Must be one of the keys from "content.special", such as birthday, snowball, salt.
+		key: The special item to buy. Must be one of the keys from "content.special", such as birthday, 
+			snowball, salt.
 			To see all current keys, import Content.py and use print(getContent('special').keys())
 			Keys as of Aug. 14, 2018:
 			['spookySparkles', 'petalFreePotion', 'sand', 'greeting', 'opaquePotion', 
@@ -369,8 +392,10 @@ class user:
 		"""
 		Change class
 		
-		User must be at least level 10. If ?class is defined and user.flags.classSelected is false it'll change the class. 
-		If user.preferences.disableClasses it'll enable classes, otherwise it sets user.flags.classSelected to false (costs 3 gems)
+		User must be at least level 10. If ?class is defined and user.flags.classSelected is 
+		false it'll change the class. If user.preferences.disableClasses it'll enable classes, 
+		otherwise it sets user.flags.classSelected to false (costs 3 gems)
+		
 		newClass: one of {warrior|rogue|wizard|healer}
 		"""
 		url = "https://habitica.com/api/v3/user/change-class?class=" + newClass
@@ -570,9 +595,7 @@ class user:
 	def openMysteryBox(self):
 		"""
 		Open the Mystery Item box
-		
-		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}	
-		"""
+				"""
 		url = "https://habitica.com/api/v3/user/open-mystery-item"
 		return(postUrl(url, self.credentials))
 
@@ -611,7 +634,8 @@ class user:
 		"""
 		Register a new user with email, login name, and password or attach local auth to a social user
 		
-		username: Login name of the new user. Must be 1-36 characters, containing only a-z, 0-9, hyphens (-), or underscores (_).
+		username: Login name of the new user. Must be 1-36 characters, containing only a-z, 0-9, 
+			hyphens (-), or underscores (_).
 		email: Email address of the new user
 		password: Password for the new user
 		confirmPassword: Password confirmation

@@ -1,7 +1,5 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 
-import user
-
 class task:
 	def __init__(self, user, data):
 		"""
