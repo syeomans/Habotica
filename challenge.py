@@ -17,7 +17,7 @@ def catchKeyError(response, path):
 class challenge:
 	def __init__(self, credentials, challengeId=None, data=None):
 		if data == None:
-			data = getChallenge(credentials, challengeId)
+			data = getChallenge(credentials, challengeId)['data']
 
 		self.credentials = credentials
 		self.group = catchKeyError(data, "['group']")
@@ -35,10 +35,10 @@ class challenge:
 		self.leader = catchKeyError(data, "['leader']")
 		self.categories = catchKeyError(data, "['categories']")
 		self.name = catchKeyError(data, "['name']")
-		self.todos = [todo(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'todos')['data']]
-		self.habits = [habit(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'habits')['data']]
-		self.dailys = [daily(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
-		self.rewards = [reward(self.id, i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
+		self.todos = [todo(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'todos')['data']]
+		self.habits = [habit(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'habits')['data']]
+		self.dailys = [daily(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
+		self.rewards = [reward(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
 
 		def deleteChallenge(self):
 			"""

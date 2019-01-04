@@ -1,6 +1,8 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 from task import task, habit, daily, todo, reward, completedTodo, getTasks, getTaskList
 from chat import chat, getChat
+from group import group
+from challenge import challenge, getChallenges
 
 def catchKeyError(response, path):
 	"""
@@ -35,7 +37,7 @@ class user:
 		self.userV = response['userV']
 		self.notifications = response['notifications']
 		self.name = response['data']['profile']['name']
-		self.guilds = catchKeyError(response, "['data']['guilds']")
+		self.guildIds = catchKeyError(response, "['data']['guilds']")
 		self.blurb = catchKeyError(response, "['data']['profile']['blurb']") 
 		self.challengeIds = catchKeyError(response, "['data']['challenges']")
 		self.inbox = response['data']['inbox']
@@ -135,6 +137,7 @@ class user:
 		self.partyChat = None
 		self.guildChats = None
 		self.challenges = None
+		self.guilds = None
 
 	def initTasks(self):
 		### Setting up the user's task lists is tricky because we want this to be done with as few
@@ -225,10 +228,13 @@ class user:
 		self.partyChat = chat(self.credentials)
 
 	def initGuildChats(self):
-		self.guildChats = {guildId: chat(self.credentials, guildId) for guildId in self.guilds}
+		self.guildChats = {guildId: chat(self.credentials, guildId) for guildId in self.guildIds}
 
 	def initChallenges(self):
 		self.challenges = {challengeId: challenge(self.credentials, challengeId) for challengeId in self.challengeIds}
+
+	def initGuilds(self):
+		self.guilds = {guildId: group(self.credentials, guildId) for guildId in self.guildIds}
 
 	def allocateAttributePoint(self, stat=None):
 		"""
