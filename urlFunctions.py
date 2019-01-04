@@ -5,7 +5,6 @@ import urllib
 import urllib2
 import json
 import ast
-#import challenge
 
 def getUrl(url, user = {}):
 	"""
