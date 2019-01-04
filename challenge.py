@@ -15,7 +15,10 @@ def catchKeyError(response, path):
 		return(None)
 
 class challenge:
-	def __init__(self, data, credentials={}):
+	def __init__(self, credentials, challengeId=None, data=None):
+		if data == None:
+			data = getChallenge(credentials, challengeId)
+
 		self.credentials = credentials
 		self.group = catchKeyError(data, "['group']")
 		self.prize = catchKeyError(data, "['prize']")

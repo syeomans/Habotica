@@ -1,5 +1,5 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
-from task import task, habit, daily, todo, reward, completedTodo, getTasks
+from task import task, habit, daily, todo, reward, completedTodo, getTasks, getTaskList
 from chat import chat, getChat
 
 def catchKeyError(response, path):
@@ -37,7 +37,7 @@ class user:
 		self.name = response['data']['profile']['name']
 		self.guilds = catchKeyError(response, "['data']['guilds']")
 		self.blurb = catchKeyError(response, "['data']['profile']['blurb']") 
-		self.challenges = catchKeyError(response, "['data']['challenges']")
+		self.challengeIds = catchKeyError(response, "['data']['challenges']")
 		self.inbox = response['data']['inbox']
 		self.lastCron = response['data']['lastCron']
 		self.training = response['data']['stats']['training']
@@ -134,6 +134,7 @@ class user:
 		self.completedTodos = None
 		self.partyChat = None
 		self.guildChats = None
+		self.challenges = None
 
 	def initTasks(self):
 		### Setting up the user's task lists is tricky because we want this to be done with as few
@@ -163,7 +164,7 @@ class user:
 				for uuid in self.habitOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.habits[index] = habit(self, thisTask)
+						self.habits[index] = habit(self.credentials, data=thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -174,7 +175,7 @@ class user:
 				for uuid in self.dailyOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.dailys[index] = daily(self, thisTask)
+						self.dailys[index] = daily(self.credentials, data=thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -185,7 +186,7 @@ class user:
 				for uuid in self.todoOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.todos[index] = todo(self, thisTask)
+						self.todos[index] = todo(self.credentials, data=thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -196,7 +197,7 @@ class user:
 				for uuid in self.rewardOrder:
 					if uuid == thisId:
 						# Sort into correct index in correct list
-						self.rewards[index] = reward(self, thisTask)
+						self.rewards[index] = reward(self.credentials, data=thisTask)
 						break
 					# Post-increment
 					index += 1
@@ -206,20 +207,28 @@ class user:
 		for i in self.habits:
 			if i == None: 
 				self.habits.remove(i)
+		for i in self.dailys:
+			if i == None: 
+				self.dailys.remove(i)
+		for i in self.todos:
+			if i == None: 
+				self.todos.remove(i)
+		for i in self.rewards:
+			if i == None: 
+				self.rewards.remove(i)
 		
 		# I don't have a way of putting completed todos in order, so marvel at the single line!
-		self.completedTodos = [completedTodo(self, i) for i in getTasks(self.credentials, 'completedTodos')['data']]
+		self.completedTodos = getTaskList(self.credentials, 'completedTodos')
 		# (I know, right?  I could have done the rest of them in one line too if it weren't so slow.)
 
 	def initPartyChat(self):
-		self.partyChat = chat(self, getChat(self.credentials)['data'])
+		self.partyChat = chat(self.credentials)
 
 	def initGuildChats(self):
-		# self.guildChats = {chat(self, getChat(self.credentials, guildId)['data'], guildId) for guildId in self.guilds}
-		self.guildChats = {}
-		for guildId in self.guilds:
-			data = getChat(self.credentials, guildId)['data']
-			self.guildChats[guildId] = chat(self, data, guildId)
+		self.guildChats = {guildId: chat(self.credentials, guildId) for guildId in self.guilds}
+
+	def initChallenges(self):
+		self.challenges = {challengeId: challenge(self.credentials, challengeId) for challengeId in self.challengeIds}
 
 	def allocateAttributePoint(self, stat=None):
 		"""

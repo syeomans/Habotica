@@ -1,14 +1,15 @@
 from urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 
 class task:
-	def __init__(self, user, data):
+	def __init__(self, credentials, taskId=None, data=None):
 		"""
 		Parent class for habit, daily, todo, reward, and completed todo.
 
 		user: A reference to a user object that this task belongs to. All tasks must belong to a user.
 		data: task data returned from an API call
 		"""
-		self.user = user
+		if data == None:
+			data = getTask(credentials, taskId)['data']
 		self.data = data
 		self.group = data['group']
 		self.tags = data['tags']
@@ -33,7 +34,7 @@ class task:
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
 		payload = {"taskId": self.id, "tagId": tagId}
-		response = postUrl(url, self.user.credentials, payload)
+		response = postUrl(url, self.credentials, payload)
 		self.tags.append(tagId)
 		return(response)
 
@@ -47,7 +48,7 @@ class task:
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
 		payload = {"text": text}
-		response = postUrl(url, self.user.credentials, payload)
+		response = postUrl(url, self.credentials, payload)
 		self.checklist.append(text)
 		return(response)
 
@@ -60,7 +61,7 @@ class task:
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
-		response = deleteUrl(url, self.user.credentials)
+		response = deleteUrl(url, self.credentials)
 		self.checklist.remove(itemId)
 		return(response)
 
@@ -71,7 +72,7 @@ class task:
 		tagId: The tag id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
-		response = deleteUrl(url, self.user.credentials)
+		response = deleteUrl(url, self.credentials)
 		self.tags.remove(tagId)
 		return(response)
 
@@ -83,7 +84,7 @@ class task:
 
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id
-		return(deleteUrl(url, self.user.credentials))
+		return(deleteUrl(url, self.credentials))
 
 	def scoreChecklist(self, itemId):
 		"""
@@ -95,7 +96,7 @@ class task:
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
-		return(postUrl(url, self.user.credentials))
+		return(postUrl(url, self.credentials))
 
 	def scoreTask(self, direction):
 		"""
@@ -107,7 +108,7 @@ class task:
 		direction: The direction for scoring the task. Allowed values: "up", "down"
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
-		return(postUrl(url, self.user.credentials))
+		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
 		"""
@@ -122,7 +123,7 @@ class task:
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
-		return(putUrl(url, self.user.credentials, payload))
+		return(putUrl(url, self.credentials, payload))
 
 	def updateTask(self, text = None, attribute = None, collapseChecklist = None, notes = None, 
 				date = None, priority = None, reminders = None, frequency = None, repeat = True, 
@@ -214,11 +215,11 @@ class task:
 		if value != 0:
 			payload["value"] = value
 			self.value = value
-		return(putUrl(url, self.user.credentials, payload))
+		return(putUrl(url, self.credentials, payload))
 
 class habit(task):
-	def __init__(self, user, data):
-		task.__init__(self, user, data)
+	def __init__(self, credentials, taskId=None, data=None):
+		task.__init__(self, credentials, taskId, data)
 		self.frequency = data['frequency']
 		self.history = data['history']
 		self.counterUp = data['counterUp']
@@ -235,11 +236,11 @@ class habit(task):
 		direction: The direction for scoring the task. Allowed values: "up", "down"
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
-		return(postUrl(url, self.user.credentials))
+		return(postUrl(url, self.credentials))
 
 class daily(task):
-	def __init__(self, user, data):
-		task.__init__(self, user, data)
+	def __init__(self, credentials, taskId=None, data=None):
+		task.__init__(self, credentials, taskId, data)
 		self.attribute = data['attribute']
 		self.checklist = data['checklist']
 		self.collapseChecklist = data['collapseChecklist']
@@ -262,7 +263,7 @@ class daily(task):
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
 		payload = {"text": text}
-		response = postUrl(url, self.user.credentials, payload)
+		response = postUrl(url, self.credentials, payload)
 		self.checklist.append(text)
 		return(response)
 
@@ -273,7 +274,7 @@ class daily(task):
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
-		response = deleteUrl(url, self.user.credentials)
+		response = deleteUrl(url, self.credentials)
 		self.checklist.remove(itemId)
 		return(response)
 
@@ -286,7 +287,7 @@ class daily(task):
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
-		return(postUrl(url, self.user.credentials))
+		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
 		"""
@@ -300,11 +301,11 @@ class daily(task):
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
-		return(putUrl(url, self.user.credentials, payload))
+		return(putUrl(url, self.credentials, payload))
 
 class todo(task):
-	def __init__(self, user, data):
-		task.__init__(self, user, data)
+	def __init__(self, credentials, taskId=None, data=None):
+		task.__init__(self, credentials, taskId, data)
 		self.checklist = data['checklist']
 		self.collapseChecklist = data['collapseChecklist']
 		self.completed = data['completed']
@@ -317,7 +318,7 @@ class todo(task):
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
 		payload = {"text": text}
-		response = postUrl(url, self.user.credentials, payload)
+		response = postUrl(url, self.credentials, payload)
 		self.checklist.append(text)
 		return(response)
 
@@ -328,7 +329,7 @@ class todo(task):
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
-		response = deleteUrl(url, self.user.credentials)
+		response = deleteUrl(url, self.credentials)
 		self.checklist.remove(itemId)
 		return(response)
 
@@ -341,7 +342,7 @@ class todo(task):
 		itemId: The checklist item _id
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
-		return(postUrl(url, self.user.credentials))
+		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
 		"""
@@ -355,15 +356,15 @@ class todo(task):
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
-		return(putUrl(url, self.user.credentials, payload))
+		return(putUrl(url, self.credentials, payload))
 
 class reward(task):
-	def __init__(self, user, data):
-		task.__init__(self, user, data)
+	def __init__(self, credentials, taskId=None, data=None):
+		task.__init__(self, credentials, taskId, data)
 
 class completedTodo(task):
-	def __init__(self, user, data):
-		task.__init__(self, user, data)
+	def __init__(self, credentials, taskId=None, data=None):
+		task.__init__(self, credentials, taskId, data)
 		self.checklist = data['checklist']
 		self.collapseChecklist = data['collapseChecklist']
 		self.completed = data['completed']
@@ -373,6 +374,25 @@ class completedTodo(task):
 
 #Functions######################################################################################
 
+
+def getTaskList(credentials, taskType):
+	"""
+	Get a list of task objects
+
+	user: a reference to an existing user object
+	taskType: one of ['habits', 'dailys', 'todos', 'rewards', 'completedTodos']
+	"""
+	data = getTasks(credentials, taskType)['data']
+	if taskType == 'habits':
+		return([habit(credentials, data=i) for i in data])
+	if taskType == 'dailys':
+		return([daily(credentials, data=i) for i in data])
+	if taskType == 'todos':
+		return([todo(credentials, data=i) for i in data])
+	if taskType == 'rewards':
+		return([reward(credentials, data=i) for i in data])
+	if taskType == 'completedTodos':
+		return([completedTodo(credentials, data=i) for i in data])
 
 
 def addTag(creds, taskId, tagId):

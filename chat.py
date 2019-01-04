@@ -70,9 +70,12 @@ class message:
 		return(postUrl(url, self.credentials))
 
 class chat:
-	def __init__(self, user, data, groupId='party'):
-		self.user = user
+	# chat(self, getChat(self.credentials)['data'])
+	def __init__(self, credentials, groupId='party', data=None):
+		if data == None:
+			data = getChat(credentials)['data']
 		self.groupId = groupId
+		self.credentials = credentials
 
 		# data = getChat(self.user.credentials, self.groupId)['data']
 		self.messages = [message(i) for i in data]
