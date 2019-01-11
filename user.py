@@ -84,6 +84,9 @@ class user:
 		self.webhooks = response['data']['webhooks']
 		self.loginIncentives = response['data']['loginIncentives']
 		self.hatchingPotions = response['data']['items']['hatchingPotions']
+		self.pets = response['data']['items']['pets']
+		self.mounts = response['data']['items']['mounts']
+		self.currentPet = response['data']['items']['currentPet']
 		self.currentMount = response['data']['items']['currentMount']
 		self.costumeBack = catchKeyError(response, "['data']['items']['gear']['costume']['back']")
 		self.costumeBody = catchKeyError(response, "['data']['items']['gear']['costume']['body']")
@@ -105,11 +108,8 @@ class user:
 		self.lastDrop = response['data']['items']['lastDrop']
 		self.food = response['data']['items']['food']
 		self.eggs = response['data']['items']['eggs']
-		self.currentPet = response['data']['items']['currentPet']
-		self.pets = response['data']['items']['pets']
 		self.quests = response['data']['items']['quests']
 		self.partyQuest = catchKeyError(response, "['data']['party']['quest']")
-		self.mounts = response['data']['items']['mounts']
 		self.specialItems = response['data']['items']['special']
 		self.flags = response['data']['flags']
 		self.pushDevices = response['data']['pushDevices']
