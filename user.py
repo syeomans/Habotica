@@ -108,6 +108,7 @@ class user:
 		self.currentPet = response['data']['items']['currentPet']
 		self.pets = response['data']['items']['pets']
 		self.quests = response['data']['items']['quests']
+		self.partyQuest = catchKeyError(response, "['data']['party']['quest']")
 		self.mounts = response['data']['items']['mounts']
 		self.specialItems = response['data']['items']['special']
 		self.flags = response['data']['flags']
