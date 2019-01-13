@@ -3,6 +3,7 @@ from task import task, habit, daily, todo, reward, completedTodo, getTasks, getT
 from chat import chat, getChat
 from group import group
 from challenge import challenge, getChallenges
+import json
 
 def catchKeyError(response, path):
 	"""
@@ -400,8 +401,14 @@ class user:
 			url = 'https://habitica.com/api/v3/user/class/cast/' + spellId
 		else:
 			url = 'https://habitica.com/api/v3/user/class/cast/' + spellId + '?' + targetId
-		#print("Casting " + spellId)
-		response = postUrl(url, self.credentials)
+
+		response = json.loads(postUrl(url, self.credentials))
+		if response['success'] == True:
+			costDict = {'fireball': 15, 'mpheal': 30, 'earth': 35, 'frost': 40,
+						'smash': 10, 'defensiveStance': 25, 'valorousPresence': 20, 'intimidate': 15,
+						'pickPocket': 10, 'backStab': 15, 'toolsOfTrade': 25, 'stealth': 45,
+						'heal': 15, 'protectAura': 30, 'brightness': 15, 'healAll': 25}
+			self.mp = self.mp - costDict[spellId]
 		return(response)
 
 	def changeClass(self, newClass):

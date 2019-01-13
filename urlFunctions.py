@@ -48,6 +48,7 @@ def postUrl(url, user = {}, payload = {}):
 	    return(connection.read())
 	except urllib2.HTTPError,e:
 	    connection = e
+	    return(connection.read())
 
 	# check. Substitute with appropriate HTTP code.
 	if connection.code == 200:
@@ -90,6 +91,7 @@ def putUrl(url, user = {}, payload = {}):
 	    return(connection.read())
 	except urllib2.HTTPError,e:
 	    connection = e
+	    return(connection.read())
 
 	# check. Substitute with appropriate HTTP code.
 	if connection.code == 200:
@@ -132,6 +134,7 @@ def deleteUrl(url, user = {}, payload = {}):
 	    return(connection.read())
 	except urllib2.HTTPError,e:
 	    connection = e
+	    return(connection.read())
 
 	# check. Substitute with appropriate HTTP code.
 	if connection.code == 200:
