@@ -25,6 +25,7 @@ class task:
 		self.type = data['type']
 		self.reminders = data['reminders']
 		self.createdAt = data['createdAt']
+		self.credentials = credentials
 
 	def addTag(self, tagId):
 		"""
