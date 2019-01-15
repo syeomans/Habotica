@@ -1,7 +1,6 @@
 from challenge import *
 from chat import *
 from content import *
-from cron import *
 from extras import *
 from group import *
 from quest import *
