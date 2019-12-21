@@ -5,44 +5,27 @@ class group:
 		if data == None:
 			data = getGroup(credentials, groupId)['data']
 		self.credentials = credentials
-		self.leaderOnly = data["leaderOnly"]
-		self.managers = data["managers"]
-		self.purchased = data["purchased"]
-		self.privacy = data["privacy"]
-		self.memberCount = data["memberCount"]
-		self.description = data["description"]
-		self.summary = data["summary"]
-		self.challengeCount = data["challengeCount"]
-		self._id = data["_id"]
-		self.quest = data["quest"]
-		self.tasksOrder = data["tasksOrder"]
-		self.chat = data["chat"]
-		self.groupId = data["id"]
-		self.balance = data["balance"]
-		self.type = data["type"]
-		self.leader = data["leader"]
-		self.categories = data["categories"]
-		self.name = data["name"]
+		self.leaderOnly = data['leaderOnly'] if 'leaderOnly' in data.keys() else None
+		self.managers = data['managers'] if 'managers' in data.keys() else None
+		self.purchased = data['purchased'] if 'purchased' in data.keys() else None
+		self.privacy = data['privacy'] if 'privacy' in data.keys() else None
+		self.memberCount = data['memberCount'] if 'memberCount' in data.keys() else None
+		self.description = data['description'] if 'description' in data.keys() else None
+		self.summary = data['summary'] if 'summary' in data.keys() else None
+		self.challengeCount = data['challengeCount'] if 'challengeCount' in data.keys() else None
+		self._id = data['_id'] if '_id' in data.keys() else None
+		self.quest = data['quest'] if 'quest' in data.keys() else None
+		self.tasksOrder = data['tasksOrder'] if 'tasksOrder' in data.keys() else None
+		self.chat = data['chat'] if 'chat' in data.keys() else None
+		self.groupId = data['groupId'] if 'groupId' in data.keys() else None
+		self.balance = data['balance'] if 'balance' in data.keys() else None
+		self.type = data['type'] if 'type' in data.keys() else None
+		self.leader = data['leader'] if 'leader' in data.keys() else None
+		self.categories = data['categories'] if 'categories' in data.keys() else None
+		self.name = data['name'] if 'name' in data.keys() else None
 
-	# def __init__(self, data):
-	# 	self.leaderOnly = data["leaderOnly"]
-	# 	self.managers = data["managers"]
-	# 	self.purchased = data["purchased"]
-	# 	self.privacy = data["privacy"]
-	# 	self.memberCount = data["memberCount"]
-	# 	self.description = data["description"]
-	# 	self.summary = data["summary"]
-	# 	self.challengeCount = data["challengeCount"]
-	# 	self._id = data["_id"]
-	# 	self.quest = data["quest"]
-	# 	self.tasksOrder = data["tasksOrder"]
-	# 	self.chat = data["chat"]
-	# 	self.groupId = data["id"]
-	# 	self.balance = data["balance"]
-	# 	self.type = data["type"]
-	# 	self.leader = data["leader"]
-	# 	self.categories = data["categories"]
-	# 	self.name = data["name"]
+	def __repr__(self):
+		return(str(self.__dict__))
 
 	def invite(self, credentials, emails=None, uuids=None):
 		"""
@@ -58,7 +41,7 @@ class group:
 		uuids: An array of uuids to invite
 			ex: ["user-id-of-existing-user", "user-id-of-another-existing-user"]
 
-		TODO: This function doesn't work. 
+		TODO: This function doesn't work.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/invite'
 		if emails != None and uuids != None:
@@ -102,7 +85,7 @@ class group:
 		Permission: GroupLeader, Admin
 
 		TODO: There's something missing from the online documentation. I have a feeling like there
-			should be a body parameter containing all the changes to make. 
+			should be a body parameter containing all the changes to make.
 			Online documentation: https://habitica.com/apidoc/#api-Group-UpdateGroup
 
 		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
@@ -169,11 +152,11 @@ def getGroups(credentials, groupType, paginate, page):
 	Group - Get groups for a user
 
 	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupType: The type of groups to retrieve. Must be a query string representing a list of values like 'tavern,party'. 
+	groupType: The type of groups to retrieve. Must be a query string representing a list of values like 'tavern,party'.
 		Possible values are party, guilds, privateGuilds, publicGuilds, tavern
 	paginate: Public guilds support pagination. When true guilds are returned in groups of 30
 		Allowed values: "true", "false"
-	page: When pagination is enabled for public guilds this parameter can be used to specify the page number 
+	page: When pagination is enabled for public guilds this parameter can be used to specify the page number
 		(the initial page is number 0 and not required)
 	"""
 	url = 'https://habitica.com/api/v3/groups/'
@@ -193,7 +176,7 @@ def invite(credentials, groupId, emails=None, uuids=None):
 	uuids: An array of uuids to invite
 		ex: ["user-id-of-existing-user", "user-id-of-another-existing-user"]
 
-	TODO: This function doesn't work. 
+	TODO: This function doesn't work.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/invite'
 	if emails != None and uuids != None:
@@ -273,7 +256,7 @@ def updateGroup(credentials, groupId):
 	Permission: GroupLeader, Admin
 
 	TODO: There's something missing from the online documentation. I have a feeling like there
-		should be a body parameter containing all the changes to make. 
+		should be a body parameter containing all the changes to make.
 		Online documentation: https://habitica.com/apidoc/#api-Group-UpdateGroup
 
 	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}

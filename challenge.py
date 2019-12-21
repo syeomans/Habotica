@@ -1,205 +1,335 @@
+"""Challenge API calls
+
+This script contains the API calls under the "Challenge" section of
+Habitica's V3 API documentation. See https://habitica.com/apidoc/
+for Habitica's API documentation.
+"""
+
 from Habotica.urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 from Habotica.task import createChallengeTask, getChallengeTasks, habit, daily, todo, reward
-
-def catchKeyError(response, path):
-	"""
-	Not meant for use outside initializing a user class
-
-	Attempts to set a variable based on a path to the data inside a user's authenticated profile. 
-	"""
-	try:
-		outstr = "output = response" + path
-		exec(outstr)
-		return(output)
-	except KeyError:
-		return(None)
+from Habotica.group import group
 
 class challenge:
+	"""Challenge class
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (string): ID of the challenge. Optional if [data] is given.
+			You can find this in the URL of the challenge's page on Habitica.
+			default: None
+		data (JSON): Optional JSON object containing the data for this
+			challenge. If this option is not taken, the data will be found with
+			an extra API call.
+			default: None
+
+	Attributes:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		group (group): The group associated with the challenge. See "Group"
+			documentation for details.
+		prize (int): Number of gems awarded to the winner of the challenge.
+		memberCount (int): Number of users participanting in the challenge.
+		description (str): A detailed description of the challenge.
+		official (bool): True if the challenge was created by Habitica admins.
+		summary (str): A short summary advertising the main purpose of the
+			challenge. Maximum 250 characters.
+		tasksOrder (dict): Ordered lists of habit, daily, reward, and todo ids.
+		createdAt (str): Timestamp of when the challenge was created.
+		updatedAt (str): Timestamp of when the challenge was last modified.
+		id (str): The challenge's id.
+		shortName (str): A shortened name for the challenge, to be used as a tag.
+		_id (str): The challenge's id.
+		leader (dict): Info on the challenge leader (id, name, etc.).
+		categories (dict): Info on the challenge's category/categories.
+		name (str): String containing the full name of the challenge..
+		todos (task/todo): A list of the challenge's todos.
+		habits (task/habit): A list of the challenge's habits.
+		dailys (task/daily): A list of the challenge's dailys.
+		rewards (task/reward): A list of the challenge's rewards.
+	"""
 	def __init__(self, credentials, challengeId=None, data=None):
 		if data == None:
 			data = getChallenge(credentials, challengeId)['data']
 
 		self.credentials = credentials
-		self.group = catchKeyError(data, "['group']")
-		self.prize = catchKeyError(data, "['prize']")
-		self.memberCount = catchKeyError(data, "['memberCount']")
-		self.description = catchKeyError(data, "['description']")
-		self.official = catchKeyError(data, "['official']")
-		self.summary = catchKeyError(data, "['summary']")
-		self.tasksOrder = catchKeyError(data, "['tasksOrder']")
-		self.createdAt = catchKeyError(data, "['createdAt']")
-		self.updatedAt = catchKeyError(data, "['updatedAt']")
-		self.id = catchKeyError(data, "['id']")
-		self.shortName = catchKeyError(data, "['shortName']")
-		self._id = catchKeyError(data, "['_id']")
-		self.leader = catchKeyError(data, "['leader']")
-		self.categories = catchKeyError(data, "['categories']")
-		self.name = catchKeyError(data, "['name']")
-		self.todos = [todo(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'todos')['data']]
-		self.habits = [habit(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'habits')['data']]
-		self.dailys = [daily(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
-		self.rewards = [reward(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
+		self.group = group(credentials, data['group']['id'], data['group']) if 'group' in data.keys() else None
 
-		def deleteChallenge(self):
-			"""
-			Delete a challenge
-			"""
-			url = "https://habitica.com/api/v3/challenges/" + self.id
-			return(deleteUrl(url, self.credentials))
+		self.prize = data['prize'] if 'prize' in data.keys() else None
+		self.memberCount = data['memberCount'] if 'memberCount' in data.keys() else None
+		self.description = data['description'] if 'description' in data.keys() else None
+		self.official = data['official'] if 'official' in data.keys() else None
+		self.summary = data['summary'] if 'summary' in data.keys() else None
+		self.tasksOrder = data['tasksOrder'] if 'tasksOrder' in data.keys() else None
+		self.createdAt = data['createdAt'] if 'createdAt' in data.keys() else None
+		self.updatedAt = data['updatedAt'] if 'updatedAt' in data.keys() else None
+		self.id = data['id'] if 'id' in data.keys() else None
+		self.shortName = data['shortName'] if 'shortName' in data.keys() else None
+		self._id = data['_id'] if '_id' in data.keys() else None
+		self.leader = data['leader'] if 'leader' in data.keys() else None
+		self.categories = data['categories'] if 'categories' in data.keys() else None
+		self.name = data['name'] if 'name' in data.keys() else None
 
-		def exportChallenge(self):
-			"""
-			Export a challenge in CSV
-			"""
-			url = "https://habitica.com/api/v3/challenges/" + self.id + "/export/csv"
-			return(getUrl(url, self.credentials))
+		try:
+			self.todos = [todo(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'todos')['data']]
+		except:
+			self.todos = None
+		try:
+			self.habits = [habit(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'habits')['data']]
+		except:
+			self.habits = None
+		try:
+			self.dailys = [daily(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'dailys')['data']]
+		except:
+			self.dailys = None
+		try:
+			self.rewards = [reward(self.credentials, data=i) for i in getChallengeTasks(self.credentials, self.id, 'rewards')['data']]
+		except:
+			self.rewards = None
 
-		def selectChallengeWinner(self, winnerId):
-			"""
-			Select winner for a challenge
+	def __repr__(self):
+		"""Print function.
 
-			winnerId: The _id of the winning user. Type: UUID
-			"""
-			url = "https://habitica.com/api/v3/challenges/" + self.id + "/selectWinner/" + winnerId
-			return(postUrl(url, self.credentials))
+		Prints challenge object's data as a dictionary.
+		"""
+		return(str(self.__dict__))
 
-		def updateChallenge(self, name = "", summary = "", description = "", leader = ""):
-			"""
-			Update the name, description, or leader of a challenge. User must be challenge leader.
+	def deleteChallenge(self):
+		"""Deletes a challenge.
 
-			name (optional): The new full name of the challenge. Type: String
-			summary (optional): The new challenge summary. Type: String
-			description (optional): The new challenge description. Type: String
-			leader (optional): The UUID of the new challenge leader. Type: String
-			"""
-			url = "https://habitica.com/api/v3/challenges/" + self.id
-			
-			payload = {}
-			if name != "":
-				payload["name"] = name
-			if summary != "":
-				payload["summary"] = summary
-			if description != "":
-				payload["description"] = description
-			if leader != "":
-				payload["leader"] = leader
+		Returns:
+			A JSON response object.
+		"""
+		url = "https://habitica.com/api/v3/challenges/" + self.id
+		return(deleteUrl(url, self.credentials))
 
-			return(putUrl(url, self.credentials, payload))
+	def exportChallenge(self):
+		"""Exports a challenge in CSV.
+
+		Returns:
+			A JSON response object.
+		"""
+		url = "https://habitica.com/api/v3/challenges/" + self.id + "/export/csv"
+		return(getUrl(url, self.credentials))
+
+	def selectChallengeWinner(self, winnerId):
+		"""Selects a winner for a challenge.
+
+		Args:
+			winnerId (str): The id of the winning user.
+
+		Returns:
+			A JSON response object.
+		"""
+		url = "https://habitica.com/api/v3/challenges/" + self.id + "/selectWinner/" + winnerId
+		return(postUrl(url, self.credentials))
+
+	def updateChallenge(self, name = "", summary = "", description = "", leader = ""):
+		"""Updates challenge info.
+
+		Updates the name, description, or leader of a challenge. User must be
+		the challenge leader.
+
+		Args:
+			name (str): The new full name of the challenge. Optional.
+			summary (str): The new challenge summary. Optional.
+			description (str): The new challenge description. Optional.
+			leader (str): The UUID of the new challenge leader. Optional.
+
+		Returns:
+			A JSON response object.
+		"""
+		url = "https://habitica.com/api/v3/challenges/" + self.id
+
+		payload = {}
+		if name != "":
+			payload["name"] = name
+		if summary != "":
+			payload["summary"] = summary
+		if description != "":
+			payload["description"] = description
+		if leader != "":
+			payload["leader"] = leader
+
+		return(putUrl(url, self.credentials, payload))
 
 def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0):
-	"""
-	Creates a challenge. Cannot create associated tasks with this route. See createChallengeTasks.
+	"""Creates a new challenge.
+
+	Creates a challenge. Cannot create associated tasks with this route.
+	See createChallengeTasks to create associated tasks.
 
 	Note: I'm not an admin, so I can't support creating official challenges.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group to which the challenge belongs. Type: UUID
-	name: String containing the full name of the challenge. Type: String
-	shortName: A shortened name for the challenge, to be used as a tag. Type: String
-	summary (optional): A short summary advertising the main purpose of the challenge; maximum 250 characters; if not supplied, challenge.name will be used
-	description (optional): A detailed description of the challenge
-	prize (optional): Number of gems offered as a prize to challenge winner. Default value: 0
-	official (optional): Whether or not a challenge is an official Habitica challenge (requires admin). Default value: false
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The id of the group to which the challenge belongs.
+		name (str): String containing the full name of the challenge.
+		shortName (str): A shortened name for the challenge, to be used as a tag
+		summary (str): A short summary advertising the main purpose of the
+			challenge. Maximum 250 characters. If not supplied, challenge.name
+			will be used. Optional.
+		description (str): A detailed description of the challenge. Optional.
+		prize (int): Number of gems offered as a prize to challenge winner.
+			Optional. Default value: 0.
+		official (bool): Whether or not a challenge is an official Habitica
+			challenge. Requires admin privileges. Default value: false.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges"
 	payload = {'group': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}
 	return(postUrl(url, creds, payload))
 
 def deleteChallenge(creds, challengeId):
-	"""
-	Delete a challenge
+	"""Deletes a challenge.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
 	return(deleteUrl(url, creds))
 
 def exportChallenge(creds, challengeId):
-	"""
-	Export a challenge in CSV
+	"""Exports a challenge in CSV format.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
 
-	Returns a csv file. 
+	Returns:
+		A CSV file containing challenge data.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/export/csv"
 	return(getUrl(url, creds))
 
 def getChallenge(creds, challengeId):
-	"""
-	Get a single challenge given its id.
+	"""Get a single challenge given its id.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
 	return(getUrl(url, creds))
 
 def getGroupChallenges(creds, groupId):
-	"""
-	Get all challenges for a group
+	"""Get all challenges for a group.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group to which the challenge belongs. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/groups/" + groupId
 	return(getUrl(url, creds))
 
 def getChallenges(creds):
-	"""
-	Get challenges the user has access to. Includes public challenges, challenges belonging to the user's group, and challenges the user has already joined.
+	"""Get challenges the user has access to.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	Includes public challenges, challenges belonging to the user's group,
+	and challenges the user has already joined.
+
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/user"
 	return(getUrl(url, creds))
 
 def joinChallenge(creds, challengeId):
-	"""
-	Join a challenge
+	"""Join a challenge.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/join"
 	return(postUrl(url, creds))
 
 def leaveChallenge(creds, challengeId):
-	"""
-	Leave a challenge
+	"""Leave a challenge.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/leave"
 	return(postUrl(url, creds))
 
 def selectChallengeWinner(creds, challengeId, winnerId):
-	"""
-	Select winner for a challenge
+	"""Select winner for a challenge.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
-	winnerId: The _id of the winning user. Type: UUID
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+		winnerId (str): The id of the winning user.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/selectWinner/" + winnerId
 	return(postUrl(url, creds))
 
 def updateChallenge(creds, challengeId, name = "", summary = "", description = "", leader = ""):
-	"""
-	Update the name, description, or leader of a challenge. User must be challenge leader.
+	"""Updates challenge info.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id. Type: UUID
-	name (optional): The new full name of the challenge. Type: String
-	summary (optional): The new challenge summary. Type: String
-	description (optional): The new challenge description. Type: String
-	leader (optional): The UUID of the new challenge leader. Type: String
+	Updates the name, description, or leader of a challenge. User must be
+	the challenge leader.
+
+	Args:
+		creds (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+		name (str): The new full name of the challenge. Optional.
+		summary (str): The new challenge summary. Optional.
+		description (str): The new challenge description. Optional.
+		leader (str): The UUID of the new challenge leader. Optional.
+
+	Returns:
+		A JSON response object.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
-	
+
 	payload = {}
 	if name != "":
 		payload["name"] = name
@@ -211,4 +341,3 @@ def updateChallenge(creds, challengeId, name = "", summary = "", description = "
 		payload["leader"] = leader
 
 	return(putUrl(url, creds, payload))
-
