@@ -1,4 +1,4 @@
-"""Chat class and API functions
+"""Chat class and API functions.
 
 This module contains class definitions for Habitica chats. Each function
 makes a call to Habitica's V3 API and the custom classes handle Habitica's
