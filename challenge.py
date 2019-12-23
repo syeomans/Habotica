@@ -41,7 +41,7 @@ class challenge:
 		tasksOrder (dict): Ordered lists of habit, daily, reward, and todo ids.
 		createdAt (str): Timestamp of when the challenge was created.
 		updatedAt (str): Timestamp of when the challenge was last modified.
-		id (str): The challenge's id.
+		challengeId (str): The challenge's id.
 		shortName (str): A shortened name for the challenge, to be used as a tag
 		_id (str): The challenge's id.
 		leader (dict): Info on the challenge leader (id, name, etc.).
@@ -67,7 +67,7 @@ class challenge:
 		self.tasksOrder = data['tasksOrder'] if 'tasksOrder' in data.keys() else None
 		self.createdAt = data['createdAt'] if 'createdAt' in data.keys() else None
 		self.updatedAt = data['updatedAt'] if 'updatedAt' in data.keys() else None
-		self.id = data['id'] if 'id' in data.keys() else None
+		self.challengeId = data['id'] if 'id' in data.keys() else None
 		self.shortName = data['shortName'] if 'shortName' in data.keys() else None
 		self._id = data['_id'] if '_id' in data.keys() else None
 		self.leader = data['leader'] if 'leader' in data.keys() else None
@@ -94,7 +94,7 @@ class challenge:
 	def __repr__(self):
 		"""Print function.
 
-		Prints challenge object's data as a dictionary.
+		Prints challenge object's attributes as a dictionary.
 		"""
 		return(str(self.__dict__))
 
@@ -103,7 +103,7 @@ class challenge:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id
 		return(deleteUrl(url, self.credentials))
@@ -113,7 +113,7 @@ class challenge:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id + "/export/csv"
 		return(getUrl(url, self.credentials))
@@ -126,7 +126,7 @@ class challenge:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id + "/selectWinner/" + winnerId
 		return(postUrl(url, self.credentials))
@@ -145,7 +145,7 @@ class challenge:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id
 
@@ -187,7 +187,7 @@ def createChallenge(creds, groupId, name, shortName, summary = " ", description 
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges"
 	payload = {'group': groupId, 'name': name, 'shortName': shortName, 'summary': summary, 'description': description, 'prize': prize}
@@ -204,7 +204,7 @@ def deleteChallenge(creds, challengeId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
 	return(deleteUrl(url, creds))
@@ -235,7 +235,7 @@ def getChallenge(creds, challengeId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
 	return(getUrl(url, creds))
@@ -251,7 +251,7 @@ def getGroupChallenges(creds, groupId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/groups/" + groupId
 	return(getUrl(url, creds))
@@ -269,7 +269,7 @@ def getChallenges(creds):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/user"
 	return(getUrl(url, creds))
@@ -285,7 +285,7 @@ def joinChallenge(creds, challengeId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/join"
 	return(postUrl(url, creds))
@@ -301,7 +301,7 @@ def leaveChallenge(creds, challengeId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/leave"
 	return(postUrl(url, creds))
@@ -318,7 +318,7 @@ def selectChallengeWinner(creds, challengeId, winnerId):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId + "/selectWinner/" + winnerId
 	return(postUrl(url, creds))
@@ -341,7 +341,7 @@ def updateChallenge(creds, challengeId, name = "", summary = "", description = "
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/challenges/" + challengeId
 

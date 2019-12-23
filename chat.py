@@ -70,7 +70,7 @@ class message:
 	def __repr__(self):
 		"""Print function.
 
-		Prints message object's data as a dictionary.
+		Prints message object's attributes as a dictionary.
 		"""
 		return(str(self.__dict__))
 
@@ -86,7 +86,7 @@ class message:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + self.chatId + '/clearflags'
 		return(postUrl(url, self.credentials))
@@ -101,7 +101,7 @@ class message:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		if previousMsg == None:
 			url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + self.chatId + '/clearflags'
@@ -121,7 +121,7 @@ class message:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + self.chatId + '/flag'
 		return(postUrl(url, self.credentials))
@@ -134,7 +134,7 @@ class message:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + self.chatId + '/like'
 		return(postUrl(url, self.credentials))
@@ -164,7 +164,7 @@ class chat:
 	"""
 	def __init__(self, credentials, groupId='party', data=None):
 		if data == None:
-			data = getChat(credentials)['data']
+			data = getChat(credentials, groupId)['data']
 		self.groupId = groupId
 		self.credentials = credentials
 
@@ -195,7 +195,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + chatId + '/clearflags'
 		return(postUrl(url, self.credentials))
@@ -211,7 +211,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		if previousMsg == None:
 			url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + chatId + '/clearflags'
@@ -231,7 +231,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + chatId + '/flag'
 		return(postUrl(url, self.credentials))
@@ -244,7 +244,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/' + chatId + '/like'
 		return(postUrl(url, self.credentials))
@@ -257,7 +257,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat/seen'
 		return(postUrl(url, self.credentials))
@@ -270,7 +270,7 @@ class chat:
 
 		Returns:
 			A JSON response object.
-			Keys: userV, notifications, data, appVersion, success
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/chat'
 		payload = {"message": text}
@@ -296,7 +296,7 @@ def clearFlags(creds, chatId, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/' + chatId + '/clearflags'
 	return(postUrl(url, creds))
@@ -316,7 +316,7 @@ def deleteMessage(creds, chatId, groupId = 'party', previousMsg = None):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if previousMsg == None:
 		url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/' + chatId + '/clearflags'
@@ -340,7 +340,7 @@ def flagMessage(creds, chatId, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/' + chatId + '/flag'
 	return(postUrl(url, creds))
@@ -358,7 +358,7 @@ def getChat(creds, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat'
 	return(getUrl(url, creds))
@@ -374,7 +374,7 @@ def getChatData(creds, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	return(getChat(creds, groupId)["data"])
 
@@ -390,7 +390,7 @@ def likeMessage(creds, chatId, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/' + chatId + '/like'
 	return(postUrl(url, creds))
@@ -406,7 +406,7 @@ def markMessagesRead(creds, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat/seen'
 	return(postUrl(url, creds))
@@ -423,7 +423,7 @@ def postMessage(creds, message, groupId = 'party'):
 
 	Returns:
 		A JSON response object.
-		Keys: userV, notifications, data, appVersion, success
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/chat'
 	payload = {"message": message}

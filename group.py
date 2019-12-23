@@ -1,9 +1,68 @@
+"""Group class and API functions
+
+This module contains class definitions for Habitica groups. Each function
+makes a call to Habitica's V3 API and the custom classes handle Habitica's
+JSON objects pythonically.
+
+See https://habitica.com/apidoc/ for Habitica's API documentation.
+
+Todo:
+	group.invite() and invite() functions don't work.
+	Turn group.quest into a quest object.
+	Turn group.tasksOrder into a dict of task objects.
+		Maybe make a new attribute 'tasks' instead.
+	updateGroup may be missing something. See function for details.
+"""
 from Habotica.urlFunctions import getUrl, postUrl, putUrl, deleteUrl
+from Habotica.chat import chat
 
 class group:
+	"""Group class
+
+	A group can be a party, a guild, or a purchased group plan.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (string): ID of the group. Can also be 'party', 'habitrpg', etc.
+			Default value of None creates an object for the user's party.
+		data (JSON): Optional JSON object containing the data for this group.
+			If this option is not taken, the data will be found with an extra
+			API call.
+			default: None
+
+	Attributes:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		leaderOnly (dict): Info hidden to all users except the leader.
+		managers (dict): The managers of this group.
+		purchased (dict): Info on the group's subscription.
+		privacy (str): 'public' or 'private'.
+		memberCount (int): Number of members in the group.
+		description (str): The group's description.
+		summary (str): The group's summary.
+		challengeCount (int): The number of challenges this group is hosting.
+		_id (str): The group's id.
+		quest (dict): The group's active quest.
+		tasksOrder (dict): Ordered lists of the group's habits, todos, dailys,
+			and rewards. Empty if a group plan hasn't been purchased.
+		groupId (str): The group's id.
+		balance (int): The number of gems in the group's balance.
+		type (str): The type of this group (party, guild, etc.).
+			Possible values: party, guilds, privateGuilds, publicGuilds, tavern
+		leader (dict): Authenticated profile of the leader of this group.
+		categories (list): A list of gild/challenge categories matching this
+			group. For more info on categories, visit:
+			https://habitica.fandom.com/wiki/Guild_and_Challenge_Categories
+		name (str): The name of the group.
+		chat (chat): The last 200 messages of the group's chat.
+	"""
 	def __init__(self, credentials, groupId=None, data=None):
 		if data == None:
 			data = getGroup(credentials, groupId)['data']
+
 		self.credentials = credentials
 		self.leaderOnly = data['leaderOnly'] if 'leaderOnly' in data.keys() else None
 		self.managers = data['managers'] if 'managers' in data.keys() else None
@@ -16,32 +75,46 @@ class group:
 		self._id = data['_id'] if '_id' in data.keys() else None
 		self.quest = data['quest'] if 'quest' in data.keys() else None
 		self.tasksOrder = data['tasksOrder'] if 'tasksOrder' in data.keys() else None
-		self.chat = data['chat'] if 'chat' in data.keys() else None
-		self.groupId = data['groupId'] if 'groupId' in data.keys() else None
+		self.groupId = data['id'] if 'id' in data.keys() else None
 		self.balance = data['balance'] if 'balance' in data.keys() else None
 		self.type = data['type'] if 'type' in data.keys() else None
 		self.leader = data['leader'] if 'leader' in data.keys() else None
 		self.categories = data['categories'] if 'categories' in data.keys() else None
 		self.name = data['name'] if 'name' in data.keys() else None
 
+		self.chat = chat(self.credentials, self.groupId, data['chat'])
+
 	def __repr__(self):
+		"""Print function.
+
+		Prints group object's attributes as a dictionary.
+		"""
 		return(str(self.__dict__))
 
 	def invite(self, credentials, emails=None, uuids=None):
-		"""
-		Group - Invite users to a group
+		"""Invite users to a group
 
-		You can provide both emails and uuids, or just one. You must provide at least one.
+		You can provide both emails and uuids, or just one. You must provide
+		at least one.
 
-		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-		emails: An array of dictionaries, each representing one email address to invite
-			email: The email address of the user being invited.
-			name(optional): The name of the user being invited.
-			ex: [{'email': 'user1email@example.com'}, {'email': 'user2@email.com', 'name': 'user2'}]
-		uuids: An array of uuids to invite
-			ex: ["user-id-of-existing-user", "user-id-of-another-existing-user"]
+		Args:
+			credentials (dict): Formatted dictionary of user id and api key. If a
+				user object has already been created, use user.credentials.
+				format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+			emails (list): An array of dictionaries, each representing one
+				email address to invite. Keys are 'email' and 'name'.
+				email: The email address of the user being invited.
+				name(optional): The name of the user being invited.
+				ex: [{'email': 'user1email@example.com'},
+					{'email': 'user2@email.com', 'name': 'user2'}]
+			uuids (list): An array of uuids to invite.
 
-		TODO: This function doesn't work.
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			This function doesn't work.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/invite'
 		if emails != None and uuids != None:
@@ -56,127 +129,198 @@ class group:
 		return(postUrl(url, credentials, payload))
 
 	def removeManager(self, credentials):
-		"""
-		Group - Remove a manager from a group
+		"""Remove a manager from a group
 
-		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-		groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+		Args:
+			credentials (dict): Formatted dictionary of user id and api key. If a
+				user object has already been created, use user.credentials.
+				format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/remove-manager'
 		return(postUrl(url, credentials))
 
 	def removeMember(self, credentials, memberId):
-		"""
-		Group - Remove a member from a group
+		"""Remove a member from a group
 
 		Permission: GroupLeader, Admin
 
-		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-		groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
-		memberId: The _id of the member to remove
+		Args:
+			credentials (dict): Formatted dictionary of user id and api key. If a
+				user object has already been created, use user.credentials.
+				format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+			memberId (str): The id of the member to remove.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId + '/removeMember/' + memberId
 		return(postUrl(url, credentials))
 
 	def updateGroup(self, credentials):
-		"""
-		Group - Remove a member from a group
+		"""Remove a member from a group
 
 		Permission: GroupLeader, Admin
 
-		TODO: There's something missing from the online documentation. I have a feeling like there
-			should be a body parameter containing all the changes to make.
-			Online documentation: https://habitica.com/apidoc/#api-Group-UpdateGroup
+		Args:
+			credentials (dict): Formatted dictionary of user id and api key. If a
+				user object has already been created, use user.credentials.
+				format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
 
-		credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-		groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		TODO:
+			There's something missing from the online documentation. I have a
+			feeling like there should be a body parameter containing all the
+			changes to make. Online documentation:
+			https://habitica.com/apidoc/#api-Group-UpdateGroup
 		"""
 		url = 'https://habitica.com/api/v3/groups/' + self.groupId
 		return(putUrl(url, credentials))
 
 def addManager(credentials, groupId):
-	"""
-	Add a manager to a group
+	"""Add a manager to a group
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/add-manager'
 	return(postUrl(url, credentials))
 
 def createGroupPlan(credentials):
-	"""
-	Create a Group and then redirect to the correct payment
+	"""Create a Group and then redirect to the correct payment
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/create-plan'
 	return(postUrl(url, credentials))
 
 def createGroup(credentials, name, groupType, privacy):
-	"""
-	Create a Group and then redirect to the correct payment
+	"""Create a Group and then redirect to the correct payment
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	name: The name of the group
-	groupType: Type of group (guild or party)
-		Allowed values: "guild", "party"
-	privacy: Privacy of group (party MUST be private)
-		Allowed values: "private", "public"
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		name (str): The name of the group.
+		groupType (str): Type of group (guild or party).
+			Allowed values: "guild", "party".
+		privacy (str): Privacy of group (party MUST be private).
+			Allowed values: "private", "public".
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups'
 	payload = {'name': name, 'type': groupType, 'privacy': privacy}
 	return(postUrl(url, credentials, payload))
 
 def getGroupPlans(credentials):
-	"""
-	Group - Get group plans for a user
+	"""Get group plans for a user
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/group-plans'
 	return(getUrl(url, credentials))
 
 def getGroup(credentials, groupId):
-	"""
-	Group - Get group
+	"""Get the data of a group.
 
 	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId
 	return(getUrl(url, credentials))
 
 def getGroups(credentials, groupType, paginate, page):
-	"""
-	Group - Get groups for a user
+	"""Get groups for a user.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupType: The type of groups to retrieve. Must be a query string representing a list of values like 'tavern,party'.
-		Possible values are party, guilds, privateGuilds, publicGuilds, tavern
-	paginate: Public guilds support pagination. When true guilds are returned in groups of 30
-		Allowed values: "true", "false"
-	page: When pagination is enabled for public guilds this parameter can be used to specify the page number
-		(the initial page is number 0 and not required)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupType (str): The type of groups to retrieve. Must be a query string.
+			representing a list of values like 'tavern,party'.
+			Possible values: party, guilds, privateGuilds, publicGuilds, tavern.
+		paginate: Public guilds support pagination. When true, guilds are
+			returned in groups of 30.
+			Allowed values: "true", "false"
+		page: When pagination is enabled for public guilds, this parameter can
+			be used to specify the page number (the initial page is number 0
+			and not required).
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/'
 	return(getUrl(url, credentials))
 
 def invite(credentials, groupId, emails=None, uuids=None):
-	"""
-	Group - Invite users to a group
+	"""Invite users to a group.
 
-	You can provide both emails and uuids, or just one. You must provide at least one.
+	You can provide both emails and uuids, or just one. You must provide at
+	least one.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	emails: An array of dictionaries, each representing one email address to invite
-		email: The email address of the user being invited.
-		name(optional): The name of the user being invited.
-		ex: [{'email': 'user1email@example.com'}, {'email': 'user2@email.com', 'name': 'user2'}]
-	uuids: An array of uuids to invite
-		ex: ["user-id-of-existing-user", "user-id-of-another-existing-user"]
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+		emails (list): An array of dictionaries, each representing one
+			email address to invite. Keys are 'email' and 'name'.
+			email: The email address of the user being invited.
+			name(optional): The name of the user being invited.
+			ex: [{'email': 'user1email@example.com'},
+				{'email': 'user2@email.com', 'name': 'user2'}]
+		uuids (list): An array of uuids to invite.
 
-	TODO: This function doesn't work.
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
+
+	Todo:
+		This function doesn't work.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/invite'
 	if emails != None and uuids != None:
@@ -191,11 +335,18 @@ def invite(credentials, groupId, emails=None, uuids=None):
 	return(postUrl(url, credentials, payload))
 
 def joinGroup(credentials, groupId):
-	"""
-	Group - Join a group
+	"""Join a group.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/join'
 	return(postUrl(url, credentials))
@@ -204,11 +355,18 @@ def leaveGroup(credentials, groupId, keep=None):
 	"""
 	Group - Leave a group
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
-	keep: Whether or not to keep challenge tasks belonging to the group being left.
-		Default value: keep-all
-		Allowed values: "remove-all", "keep-all"
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+		keep: Whether or not to keep challenge tasks belonging to the group being left.
+			Default value: keep-all
+			Allowed values: "remove-all", "keep-all"
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if keep == None:
 		url = 'https://habitica.com/api/v3/groups/:groupId/leave'
@@ -217,50 +375,80 @@ def leaveGroup(credentials, groupId, keep=None):
 	return(postUrl(url, credentials))
 
 def rejectInvite(credentials, groupId):
-	"""
-	Group - Reject a group invitation
+	"""Reject a group invitation.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/reject-invite'
 	return(postUrl(url, credentials))
 
 def removeManager(credentials, groupId):
-	"""
-	Group - Remove a manager from a group
+	"""Remove a manager from a group.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/remove-manager'
 	return(postUrl(url, credentials))
 
 def removeMember(credentials, groupId, memberId):
-	"""
-	Group - Remove a member from a group
+	"""Remove a member from a group.
 
 	Permission: GroupLeader, Admin
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
-	memberId: The _id of the member to remove
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
+		memberId: The id of the member to remove.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId + '/removeMember/' + memberId
 	return(postUrl(url, credentials))
 
 def updateGroup(credentials, groupId):
-	"""
-	Group - Remove a member from a group
+	"""Remove a member from a group.
 
 	Permission: GroupLeader, Admin
 
-	TODO: There's something missing from the online documentation. I have a feeling like there
-		should be a body parameter containing all the changes to make.
-		Online documentation: https://habitica.com/apidoc/#api-Group-UpdateGroup
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The group id. 'party' for the user's party and 'habitrpg'
+			for the tavern are accepted.
 
-	credentials: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
+
+	Todo:
+		There's something missing from the online documentation. I have a
+		feeling like there should be a body parameter containing all the
+		changes to make. Online documentation:
+		https://habitica.com/apidoc/#api-Group-UpdateGroup
 	"""
 	url = 'https://habitica.com/api/v3/groups/' + groupId
 	return(putUrl(url, credentials))
