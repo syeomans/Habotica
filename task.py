@@ -1,13 +1,76 @@
+"""Task class and API functions
+
+This module contains class definitions for Habitica tasks. Each function
+makes a call to Habitica's V3 API and the custom classes handle Habitica's
+JSON objects pythonically.
+
+See https://habitica.com/apidoc/ for Habitica's API documentation.
+
+Todo:
+	Move task.createChecklist() to children classes that use it.
+	Remove credentials from task attributes.
+	Test task.deleteTask().
+	Test task.scoreChecklist() and move to related children.
+	Test task.scoreTask() and move to related children.
+	Test task.updateChecklist() and move to related children.
+	Test task.updateTask().
+	createGroupTask() payload should be a task object.
+"""
 from Habotica.urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 
 class task:
-	def __init__(self, credentials, taskId=None, data=None):
-		"""
-		Parent class for habit, daily, todo, reward, and completed todo.
+	"""Parent class for habit, daily, todo, reward, and completed todo.
 
-		user: A reference to a user object that this task belongs to. All tasks must belong to a user.
-		data: task data returned from an API call
-		"""
+	This class uses polymorphism to handle habits, dailys, todos, rewards,
+	and completed todos. All of these child objects inherit the attributes of
+	this class as well as their own.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes (inherited for all task types):
+		data (JSON): Response object containing the data for this task.
+		group (dict): Data relevant to paid group plans.
+			keys: 'approval', 'assignedUsers', 'sharedCompletion'
+		tags (list): A list of tag ids. To get a dictionary of tagIds and
+			tagNames, use the tag module: getTags(credentials).
+		text (str): The text of the task.
+		challenge (dict): Data related to this task's challenge (if any).
+			keys: taskId, id, shortName, broken
+		userId (str): The user id of the task's related user.
+		value (float): The task value for todos, dailys, and habits. Gold cost
+			for rewards. See here for more info on task value:
+			https://habitica.fandom.com/wiki/Task_Value
+		id (str): The task id.
+		priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+			1.5: Medium. 2: Hard.
+		notes (str): The notes section of this task.
+		updatedAt (str): Timestamp when the task was last modified.
+		_id (str): The task id.
+		type (str): One of: habit, daily, todo, reward, completedTodo.
+		reminders (list): A list of dictionaries of reminders.
+		 	keys: id, time.
+		createdAt (str): Timestamp when the task was created.
+		credentials (dict): Credentials of the user who this task belongs to.
+			TODO: Remove this
+
+		Todo:
+			Remove credentials from attributes.
+	"""
+	def __init__(self, credentials, taskId=None, data=None):
 		if data == None:
 			data = getTask(credentials, taskId)['data']
 		self.data = data
@@ -28,10 +91,14 @@ class task:
 		self.credentials = credentials
 
 	def addTag(self, tagId):
-		"""
-		Task - Add a tag to a task
+		"""Add a tag to a task.
 
-		tagId: The tag id
+		Args:
+			tagId (str): The tag id.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
 		payload = {"taskId": self.id, "tagId": tagId}
@@ -40,12 +107,17 @@ class task:
 		return(response)
 
 	def createChecklist(self, text):
-		"""
-		Task - Add an item to the task's checklist
+		"""Add an item to the task's checklist.
 
-		TODO: move to children classes that use this
+		Args:
+			text (str): The text of the checklist item.
 
-		text: The text of the checklist item
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Move to children classes that use this.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
 		payload = {"text": text}
@@ -54,12 +126,14 @@ class task:
 		return(response)
 
 	def deleteChecklist(self, itemId):
-		"""
-		Task - Delete a checklist item from a task
+		"""Delete a checklist item from a task.
 
-		TODO: move to children classes that use this 
+		Args:
+			itemId (str): The checklist item id.
 
-		itemId: The checklist item _id
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		response = deleteUrl(url, self.credentials)
@@ -67,10 +141,14 @@ class task:
 		return(response)
 
 	def removeTag(self, tagId):
-		"""
-		Task - Delete a tag from a task
+		"""Delete a tag from a task.
 
-		tagId: The tag id
+		Args:
+			tagId (str): The tag id.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/tags/" + tagId
 		response = deleteUrl(url, self.credentials)
@@ -78,100 +156,138 @@ class task:
 		return(response)
 
 	def deleteTask(self):
-		"""
-		Task - Delete a task given its id
+		"""Delete a task given its id.
 
-		TODO: test
+		Args:
+			No arguments.
 
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test this.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id
 		return(deleteUrl(url, self.credentials))
 
 	def scoreChecklist(self, itemId):
-		"""
-		Task - Score a checklist item
+		"""Score a checklist item.
 
-		TODO: test
-		TODO: move to children classes that use this
+		Args:
+			itemId (str): The checklist item id.
 
-		itemId: The checklist item _id
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
+			Move to children classes that use this.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
 		return(postUrl(url, self.credentials))
 
 	def scoreTask(self, direction):
-		"""
-		Task - Score a task
+		"""Score a task.
 
-		TODO: test
-		TODO: move to children classes that use this
+		Args:
+			direction (str): The direction for scoring the task.
+				Allowed values: "up", "down".
 
-		direction: The direction for scoring the task. Allowed values: "up", "down"
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
+			Move to children classes that use this.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
 		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
-		"""
-		Task - Unassign a user from a task
-		Unassigns a user to from a group task
+		"""Update a checklist item.
 
-		TODO: test
-		TODO: move to children classes that use this
+		Args:
+			itemId (str): The checklist item id.
+			text (str): The text that will replace the current checkitem text.
 
-		itemId: The checklist item _id
-		text: The text that will replace the current checkitem text.
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
+			Move to children classes that use this.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
 		return(putUrl(url, self.credentials, payload))
 
-	def updateTask(self, text = None, attribute = None, collapseChecklist = None, notes = None, 
-				date = None, priority = None, reminders = None, frequency = None, repeat = True, 
+	def updateTask(self, text = None, attribute = None, collapseChecklist = None, notes = None,
+				date = None, priority = None, reminders = None, frequency = None, repeat = True,
 				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
-		"""
-		Task - Update a task
+		"""Update a task.
 
-		TODO: test
+		Args:
+			text (str): Optional. The text to be displayed for the task.
+			attribute (str): Optional. User's attribute to use.
+				Options are: "str", "int", "per", "con".
+			collapseChecklist (bool): Optional. Determines if a checklist will
+				be displayed.
+				Default value: false
+			notes (str): Optional. Extra notes.
+			date (str): Optional. Due date to be shown in task list. Only valid
+				for type "todo."
+			priority (float): Optional. Difficulty, options are 0.1, 1, 1.5, 2;
+				eqivalent of Trivial, Easy, Medium, Hard.
+				Default value: 1
+			reminders (str[]): Optional. Array of reminders, each an object
+				that must include a UUID, startDate and time.
+				For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3",
+				"startDate":"1/16/17","time":"1/16/17" }
+			frequency (str): Optional. Value "weekly" enables "On days of the
+				week", value "daily" enables "EveryX Days". Only valid for type
+				"daily".
+				Default value: "weekly"
+				Allowed values: "weekly", "daily"
+			repeat (str): Optional. List of objects for days of the week. Days
+				that are true will be repeated upon. Only valid for type
+				"daily". Any days not specified will be marked as true.
+				Days are: su, m, t, w, th, f, s. Value of frequency must be
+				"weekly". For example, to skip repeats on Mon & Fri:
+				"repeat":{"f":false,"m":false}
+				Default value: true
+			everyX (int): Optional. The number of days until this daily task is
+				available again. Value of frequency must be "daily".
+				Default value: 1
+			streak (int): Optional. Number of days that the task has
+				consecutively been checked off. Only valid for type "daily".
+				Default value: 0
+			startDate (str): Optional. Date when the task will first become
+				available. Only valid for type "daily"
+			up (bool): Optional. If true, enables the "+" under
+				"Directions/Action" for "Good habits." Only valid for type
+				"habit."
+				Default value: true
+			down (bool): Optional. If true, enables the "-" under
+				"Directions/Action" for "Bad habits." Only valid for type
+				"habit."
+				Default value: true
+			value (float): Optional. The cost in gold of the reward. Only valid
+				for type "reward."
+				Default value: 0
 
-		text: String (optional). The text to be displayed for the task
-		attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
-			Allowed values: "str", "int", "per", "con"
-		collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
-			Default value: false
-		notes (optional): String. Extra notes
-		date (optional): String. Due date to be shown in task list. Only valid for type "todo."
-		priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
-			Default value: 1
-			Allowed values: "0.1", "1", "1.5", "2"
-		reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
-			For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
-		frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
-			Only valid for type "daily".
-			Default value: weekly
-			Allowed values: "weekly", "daily"
-		repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
-			Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
-			Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
-			Default value: true
-		everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
-			available again.
-			Default value: 1
-		streak (optional): Number. Number of days that the task has consecutively been checked off. 
-			Only valid for type "daily"
-			Default value: 0
-		startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
-		up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
-			"Good habits."
-			Default value: true
-		down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
-			"Bad habits."
-			Default value: true
-		value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
-			Default value: 0
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id
-		payload = {} 
+		payload = {}
 		if text != None:
 			payload["text"] = text
 			self.text = text
@@ -219,6 +335,61 @@ class task:
 		return(putUrl(url, self.credentials, payload))
 
 class habit(task):
+	"""Habitica habit class. Inherits attributes and functions from Task.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes:
+		Inherited:
+			data (JSON): Response object containing the data for this task.
+			group (dict): Data relevant to paid group plans.
+				keys: 'approval', 'assignedUsers', 'sharedCompletion'
+			tags (list): A list of tag ids. To get a dictionary of tagIds and
+				tagNames, use the tag module: getTags(credentials).
+			text (str): The text of the task.
+			challenge (dict): Data related to this task's challenge (if any).
+				keys: taskId, id, shortName, broken
+			userId (str): The user id of the task's related user.
+			value (float): The task value for todos, dailys, and habits. Gold
+				cost for rewards. See here for more info on task value:
+				https://habitica.fandom.com/wiki/Task_Value
+			id (str): The task id.
+			priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+				1.5: Medium. 2: Hard.
+			notes (str): The notes section of this task.
+			updatedAt (str): Timestamp when the task was last modified.
+			_id (str): The task id.
+			type (str): One of: habit, daily, todo, reward, completedTodo.
+			reminders (list): A list of dictionaries of reminders.
+			 	keys: id, time.
+			createdAt (str): Timestamp when the task was created.
+			credentials (dict): Credentials of the user this task belongs to.
+				TODO: Remove this
+		Standalone:
+			frequency (str): "weekly" or "daily".
+			history (dict[]): History of the habit.
+				keys: 'date', 'value', 'scoredUp', 'scoredDown'
+			counterUp (int): The number of times this daily has been scored up
+				this "Reset Streak" period.
+			up (bool): True if scoring this habit upward is enabled.
+			counterDown (int): The number of times this daily has been scored
+				down this "Reset Streak" period.
+			down (bool): True if scoring this habit downward is enabled.
+	"""
 	def __init__(self, credentials, taskId=None, data=None):
 		task.__init__(self, credentials, taskId, data)
 		self.frequency = data['frequency']
@@ -229,17 +400,91 @@ class habit(task):
 		self.up = data['up']
 
 	def scoreTask(self, direction):
-		"""
-		Task - Score a task
+		"""Score a task.
 
-		TODO: test
+		Args:
+			direction (str): The direction for scoring the task.
+			Allowed values: "up", "down"
 
-		direction: The direction for scoring the task. Allowed values: "up", "down"
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/score/" + direction
 		return(postUrl(url, self.credentials))
 
 class daily(task):
+	"""Habitica daily class. Inherits attributes and functions from Task.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes:
+		Inherited:
+			data (JSON): Response object containing the data for this task.
+			group (dict): Data relevant to paid group plans.
+				keys: 'approval', 'assignedUsers', 'sharedCompletion'
+			tags (list): A list of tag ids. To get a dictionary of tagIds and
+				tagNames, use the tag module: getTags(credentials).
+			text (str): The text of the task.
+			challenge (dict): Data related to this task's challenge (if any).
+				keys: taskId, id, shortName, broken
+			userId (str): The user id of the task's related user.
+			value (float): The task value for todos, dailys, and habits. Gold
+				cost for rewards. See here for more info on task value:
+				https://habitica.fandom.com/wiki/Task_Value
+			id (str): The task id.
+			priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+				1.5: Medium. 2: Hard.
+			notes (str): The notes section of this task.
+			updatedAt (str): Timestamp when the task was last modified.
+			_id (str): The task id.
+			type (str): One of: habit, daily, todo, reward, completedTodo.
+			reminders (list): A list of dictionaries of reminders.
+			 	keys: id, time.
+			createdAt (str): Timestamp when the task was created.
+			credentials (dict): Credentials of the user this task belongs to.
+				TODO: Remove this
+		Standalone:
+			attribute (str): Which stat to use. Not fully implemented in-game.
+				Allowed values: str, int, con, per
+			checklist (dict[]): The daily's checklist.
+				keys: completed (bool), text (str), id (str)
+			collapseChecklist (bool): Determines if a checklist will be
+				displayed.
+			completed (bool): Whether this daily has been checked off.
+			startDate (str): The date this daily comes into effect.
+				ex: 2018-02-19T05:00:00.000Z
+			isDue (bool): True if this daily is due today.
+			frequency (str): How often this daily repeats.
+				Allowd values: daily, weekly, monthly, yearly
+			daysOfMonth (int[]): The calendar day of each month this daily
+				repeats on. Empty array if frequency is not "monthly".
+			weeksOfMonth (int[]): The calendar week of each month this daily
+				repeats on. Empty array if frequency is not "monthly".
+			repeat (dict): Weekdays to repeat on.
+				keys: m, t, w, th, f, s, su. All values are bool.
+			nextDue (str[]): The next 6 datetimes the daily will be due.
+			yesterDaily (bool): Whether this was marked as complete or not due
+				yesterday. In-game flag for Record Yesterday's Activity feature.
+			everyX (int): The number of days/weeks/etc. this daily repeats.
+	"""
 	def __init__(self, credentials, taskId=None, data=None):
 		task.__init__(self, credentials, taskId, data)
 		self.attribute = data['attribute']
@@ -257,10 +502,14 @@ class daily(task):
 		self.everyX = data['everyX']
 
 	def createChecklist(self, text):
-		"""
-		Task - Add an item to the task's checklist
+		"""Add an item to the task's checklist.
 
-		text: The text of the checklist item
+		Args:
+			text (str): The text of the checklist item.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist"
 		payload = {"text": text}
@@ -269,10 +518,14 @@ class daily(task):
 		return(response)
 
 	def deleteChecklist(self, itemId):
-		"""
-		Task - Delete a checklist item from a task
+		"""Delete a checklist item from a task.
 
-		itemId: The checklist item _id
+		Args:
+			itemId (str): The checklist item id.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		response = deleteUrl(url, self.credentials)
@@ -280,31 +533,88 @@ class daily(task):
 		return(response)
 
 	def scoreChecklist(self, itemId):
-		"""
-		Task - Score a checklist item
+		"""Score a checklist item
 
-		TODO: test
+		Args:
+			itemId (str): The checklist item id.
 
-		itemId: The checklist item _id
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
 		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
-		"""
-		Task - Unassign a user from a task
-		Unassigns a user to from a group task
+		"""Unassign a user from a paid group task.
 
-		TODO: test
+		Args:
+			itemId (str): The checklist item id.
+			text (str): The text that will replace the current checkitem text.
 
-		itemId: The checklist item _id
-		text: The text that will replace the current checkitem text.
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
 		return(putUrl(url, self.credentials, payload))
 
 class todo(task):
+	"""Habitica todo class. Inherits attributes and functions from Task.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes:
+		Inherited:
+			data (JSON): Response object containing the data for this task.
+			group (dict): Data relevant to paid group plans.
+				keys: 'approval', 'assignedUsers', 'sharedCompletion'
+			tags (list): A list of tag ids. To get a dictionary of tagIds and
+				tagNames, use the tag module: getTags(credentials).
+			text (str): The text of the task.
+			challenge (dict): Data related to this task's challenge (if any).
+				keys: taskId, id, shortName, broken
+			userId (str): The user id of the task's related user.
+			value (float): The task value for todos, dailys, and habits. Gold
+				cost for rewards. See here for more info on task value:
+				https://habitica.fandom.com/wiki/Task_Value
+			id (str): The task id.
+			priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+				1.5: Medium. 2: Hard.
+			notes (str): The notes section of this task.
+			updatedAt (str): Timestamp when the task was last modified.
+			_id (str): The task id.
+			type (str): One of: habit, daily, todo, reward, completedTodo.
+			reminders (list): A list of dictionaries of reminders.
+			 	keys: id, time.
+			createdAt (str): Timestamp when the task was created.
+			credentials (dict): Credentials of the user this task belongs to.
+				TODO: Remove this
+		Standalone:
+			checklist (dict[]): The todo's checklist.
+				keys: completed (bool), text (str), id (str)
+			collapseChecklist (bool): Determines if a checklist will be
+				displayed.
+			completed (bool): Whether this daily has been checked off.
+	"""
 	def __init__(self, credentials, taskId=None, data=None):
 		task.__init__(self, credentials, taskId, data)
 		self.checklist = data['checklist']
@@ -312,8 +622,7 @@ class todo(task):
 		self.completed = data['completed']
 
 	def createChecklist(self, text):
-		"""
-		Task - Add an item to the task's checklist
+		"""Add an item to the task's checklist.
 
 		text: The text of the checklist item
 		"""
@@ -327,7 +636,12 @@ class todo(task):
 		"""
 		Task - Delete a checklist item from a task
 
-		itemId: The checklist item _id
+		Args:
+			itemId (str): The checklist item id.
+
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		response = deleteUrl(url, self.credentials)
@@ -335,35 +649,140 @@ class todo(task):
 		return(response)
 
 	def scoreChecklist(self, itemId):
-		"""
-		Task - Score a checklist item
+		"""Score a checklist item
 
-		TODO: test
+		Args:
+			itemId (str): The checklist item id.
 
-		itemId: The checklist item _id
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId + "/score"
 		return(postUrl(url, self.credentials))
 
 	def updateChecklist(self, itemId, text):
-		"""
-		Task - Unassign a user from a task
-		Unassigns a user to from a group task
+		"""Update a checklist item
 
-		TODO: test
+		Args:
+			itemId (str): The checklist item id.
+			text (str): The text that will replace the current checkitem text.
 
-		itemId: The checklist item _id
-		text: The text that will replace the current checkitem text.
+		Returns:
+			A JSON response object.
+			Keys: userV, notifications, data, appVersion, success.
+
+		Todo:
+			Test.
 		"""
 		url = "https://habitica.com/api/v3/tasks/" + self.id + "/checklist/" + itemId
 		payload = {"text": text}
 		return(putUrl(url, self.credentials, payload))
 
 class reward(task):
+	"""Habitica reward class. Inherits attributes and functions from Task.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes:
+		Inherited:
+			data (JSON): Response object containing the data for this task.
+			group (dict): Data relevant to paid group plans.
+				keys: 'approval', 'assignedUsers', 'sharedCompletion'
+			tags (list): A list of tag ids. To get a dictionary of tagIds and
+				tagNames, use the tag module: getTags(credentials).
+			text (str): The text of the task.
+			challenge (dict): Data related to this task's challenge (if any).
+				keys: taskId, id, shortName, broken
+			userId (str): The user id of the task's related user.
+			value (float): The task value for todos, dailys, and habits. Gold
+				cost for rewards. See here for more info on task value:
+				https://habitica.fandom.com/wiki/Task_Value
+			id (str): The task id.
+			priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+				1.5: Medium. 2: Hard.
+			notes (str): The notes section of this task.
+			updatedAt (str): Timestamp when the task was last modified.
+			_id (str): The task id.
+			type (str): One of: habit, daily, todo, reward, completedTodo.
+			reminders (list): A list of dictionaries of reminders.
+			 	keys: id, time.
+			createdAt (str): Timestamp when the task was created.
+			credentials (dict): Credentials of the user this task belongs to.
+				TODO: Remove this
+		Standalone:
+			No standalone attributes.
+	"""
 	def __init__(self, credentials, taskId=None, data=None):
 		task.__init__(self, credentials, taskId, data)
 
 class completedTodo(task):
+	"""Completed todo class. Inherits attributes and functions from Task.
+
+	Note:
+		End users should create task lists through User objects. Create a User
+		and call user.initTasks(). This will automatically populate the User
+		object's habits, dailys, todos, rewards, and completdTodos.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task's id. Optional if [data] is supplied. Either
+			[data] or [taskId] must be given.
+		data (JSON): Optional JSON object containing the data for this
+			task. If this option is not taken, the data will be found with
+			an extra API call. Either [data] or [taskId] must be given.
+			default: None
+
+	Attributes:
+		Inherited:
+			data (JSON): Response object containing the data for this task.
+			group (dict): Data relevant to paid group plans.
+				keys: 'approval', 'assignedUsers', 'sharedCompletion'
+			tags (list): A list of tag ids. To get a dictionary of tagIds and
+				tagNames, use the tag module: getTags(credentials).
+			text (str): The text of the task.
+			challenge (dict): Data related to this task's challenge (if any).
+				keys: taskId, id, shortName, broken
+			userId (str): The user id of the task's related user.
+			value (float): The task value for todos, dailys, and habits. Gold
+				cost for rewards. See here for more info on task value:
+				https://habitica.fandom.com/wiki/Task_Value
+			id (str): The task id.
+			priority (float): The difficulty of the task. 0.1: Trivial. 1: Easy.
+				1.5: Medium. 2: Hard.
+			notes (str): The notes section of this task.
+			updatedAt (str): Timestamp when the task was last modified.
+			_id (str): The task id.
+			type (str): One of: habit, daily, todo, reward, completedTodo.
+			reminders (list): A list of dictionaries of reminders.
+			 	keys: id, time.
+			createdAt (str): Timestamp when the task was created.
+			credentials (dict): Credentials of the user this task belongs to.
+				TODO: Remove this
+		Standalone:
+			checklist (dict[]): The todo's checklist.
+				keys: completed (bool), text (str), id (str)
+			collapseChecklist (bool): Determines if a checklist will be
+				displayed.
+			completed (bool): Whether this daily has been checked off.
+			dateCompleted (str): Timestamp when the todo was completed.
+	"""
 	def __init__(self, credentials, taskId=None, data=None):
 		task.__init__(self, credentials, taskId, data)
 		self.checklist = data['checklist']
@@ -371,17 +790,18 @@ class completedTodo(task):
 		self.completed = data['completed']
 		self.dateCompleted = data['dateCompleted']
 
-
-
-#Functions######################################################################################
-
-
 def getTaskList(credentials, taskType):
-	"""
-	Get a list of task objects
+	"""Get a list of task objects.
 
-	user: a reference to an existing user object
-	taskType: one of ['habits', 'dailys', 'todos', 'rewards', 'completedTodos']
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskType (str): one of habits, dailys, todos, rewards, completedTodos
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	data = getTasks(credentials, taskType)['data']
 	if taskType == 'habits':
@@ -396,101 +816,144 @@ def getTaskList(credentials, taskType):
 		return([completedTodo(credentials, data=i) for i in data])
 
 
-def addTag(creds, taskId, tagId):
-	"""
-	Task - Add a tag to a task
+def addTag(credentials, taskId, tagId):
+	"""Add a tag to a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	tagId: The tag id
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		tagId (str): The tag id.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/tags/" + tagId
 	payload = {"taskId": taskId, "tagId": tagId}
-	return(postUrl(url, creds, payload))
+	return(postUrl(url, credentials, payload))
 
-def createChecklist(creds, taskId, text):
-	"""
-	Task - Add an item to the task's checklist
+def createChecklist(credentials, taskId, text):
+	"""Add an item to the task's checklist.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	text: The text of the checklist item
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		text (str): The text of the checklist item.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist"
 	payload = {"text": text}
-	return(postUrl(url, creds, payload))
+	return(postUrl(url, credentials, payload))
 
-def approveTask(creds, taskId, userId):
-	"""
-	Task - Approves a user assigned to a group task
+def approveTask(credentials, taskId, userId):
+	"""Approves a user assigned to a group task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	userId: The id of the user that will be approved
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		userId (str): The id of the user that will be approved.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/approve/" + userId
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def assignTask(creds, taskId, assignedUserId):
-	"""
-	Task - Assigns a user to a group task
+def assignTask(credentials, taskId, assignedUserId):
+	"""Assigns a user to a group task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	assignedUserId: The id of the user that will be assigned to the task
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		assignedUserId (str): The id of the user that will be assigned to the
+			task.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/assign/" + assignedUserId
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def createChallengeTask(creds, challengeId, text, taskType, alias = None, attribute = None, collapseChecklist = False, 
-						notes = None, date = None, priority = 1, reminders = None, frequency = "weekly", 
-						repeat = True, everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
-	"""
-	Task - Create a new task belonging to a challenge
-	Can be passed an object to create a single task or an array of objects to create multiple tasks.
+def createChallengeTask(credentials, challengeId, text, taskType, alias = None,
+		attribute = None, collapseChecklist = False, notes = None, date = None,
+		priority = 1, reminders = None, frequency = "weekly", repeat = True,
+		everyX = 1, streak = 0, startDate = None, up = True, down = True,
+		value = 0):
+	"""Create a new task belonging to a challenge.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	text: String. The text to be displayed for the task
-	taskType: String. Task type, options are: "habit", "daily", "todo", "reward".
-		Allowed values: "habit", "daily", "todo", "reward"
-	alias (optional): String. Alias to assign to task
-	attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
-		Allowed values: "str", "int", "per", "con"
-	collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
-		Default value: false
-	notes (optional): String. Extra notes
-	date (optional): String. Due date to be shown in task list. Only valid for type "todo."
-	priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
-		Default value: 1
-		Allowed values: "0.1", "1", "1.5", "2"
-	reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
-		For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
-	frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
-		Only valid for type "daily".
-		Default value: weekly
-		Allowed values: "weekly", "daily"
-	repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
-		Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
-		Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
-		Default value: true
-	everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
-		available again.
-		Default value: 1
-	streak (optional): Number. Number of days that the task has consecutively been checked off. 
-		Only valid for type "daily"
-		Default value: 0
-	startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
-	up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
-		"Good habits."
-		Default value: true
-	down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
-		"Bad habits."
-		Default value: true
-	value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
-		Default value: 0
+	Can be passed an object to create a single task or an array of objects to
+	create multiple tasks.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		text (str): The text to be displayed for the task.
+		taskType (str): One of: "habit", "daily", "todo", "reward".
+		alias (str): Optional. Alias to assign to task.
+		attribute (str): Optional. User's attribute (stat) to use.
+			Allowed values: "str", "int", "per", "con"
+		collapseChecklist (bool): Optional. Determines if the checklist will be
+			displayed.
+			Default value: false
+		notes (str): Optional. Extra notes.
+		date (str): Optional. Due date to be shown in task list. Only valid
+			for type "todo."
+		priority (float): Optional. Difficulty, options are 0.1, 1, 1.5, 2;
+			eqivalent of Trivial, Easy, Medium, Hard.
+			Default value: 1
+			Allowed values: "0.1", "1", "1.5", "2"
+		reminders (str[]): Optional. Array of reminders, each an object that
+			must include: a UUID, startDate and time.
+			For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3",
+			"startDate":"1/16/17","time":"1/16/17" }
+		frequency (str): Optional. Value "weekly" enables "On days of the week",
+			value "daily" enables "EveryX Days". Only valid for type "daily".
+			Default value: weekly
+			Allowed values: "weekly", "daily"
+		repeat (dict): Optional. List of objects for days of the week. Days
+			that are true will be repeated upon. Only valid for type "daily".
+			Any days not specified will be marked as true. Days are: su, m, t,
+			w, th, f, s. Value of frequency must be "weekly". For example, to
+			skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
+			Default value: true
+		everyX (float): Optional. Value of frequency must be "daily". The
+			number of days until this daily is available again.
+			Default value: 1
+		streak (int): Optional. Number of days that the task has consecutively
+			been checked off. Only valid for type "daily"
+			Default value: 0
+		startDate (str): Optional. Date when the task will first become
+			available. Only valid for type "daily".
+		up (bool): Optional. Only valid for type "habit." If true, enables the
+			"+" under "Directions/Action" for "Good habits."
+			Default value: true
+		down (bool): Optional. Only valid for type "habit." If true, enables
+			the "-" under "Directions/Action" for "Bad habits."
+			Default value: true
+		value (float): Optional. Only valid for type "reward." The cost in gold
+			of the reward.
+			Default value: 0
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId
-	payload = {"text": text, "type": taskType} 
+	payload = {"text": text, "type": taskType}
 	if alias != None:
 		payload["alias"] = alias
 	if attribute != None:
@@ -521,97 +984,146 @@ def createChallengeTask(creds, challengeId, text, taskType, alias = None, attrib
 		payload["down"] = down
 	if value != 0:
 		payload["value"] = value
-	return(postUrl(url, creds, payload))
+	return(postUrl(url, credentials, payload))
 
-def getTasks(creds, taskType = None):
-	"""
-	Task - Get a user's tasks
+def getTasks(credentials, taskType = None):
+	"""Get a user's tasks.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskType: one of ['habits', 'dailys', 'todos', 'rewards', 'completedTodos'] (optional)
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskType (str): One of: "habit", "daily", "todo", "reward".
 
-	The returned dictionaries' structure depends on the type of task. Keys defined below:
+	Returns:
+		A JSON response object. The returned object's structure depends on the
+		type of task. Keys are listed below:
+		todos keys: attribute, checklist, group, collapseChecklist, tags, text,
+			challenge, userId, value, id, priority, completed, notes, updatedAt,
+			_id, type, reminders, createdAt
+		dailys keys: streak, startDate, isDue, attribute, userId, frequency,
+			updatedAt, id, createdAt, daysOfMonth, group, collapseChecklist,
+			priority, text, type, repeat, tags, checklist, completed, nextDue,
+			weeksOfMonth, yesterDaily, challenge, reminders, everyX, value, _id,
+			notes, history
+		habits keys: attribute, counterUp, group, tags, down, text, challenge,
+			counterDown, userId, up, value, id, priority, frequency, notes,
+			updatedAt, _id, type, reminders, createdAt, history
+		rewards keys: attribute, group, tags, text, challenge, userId, value,
+			id, priority, notes, updatedAt, _id, type, reminders, createdAt
+		completedTodos keys: attribute, dateCompleted, checklist, group,
+			collapseChecklist, tags, text, challenge, userId, value, id,
+			priority, completed, notes, updatedAt, _id, type, reminders,
+			createdAt
 
-	todos keys: attribute, checklist, group, collapseChecklist, tags, text, challenge, userId, value, 
-		id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
-	dailys keys: streak, startDate, isDue, attribute, userId, frequency, updatedAt, id, createdAt, 
-		daysOfMonth, group, collapseChecklist, priority, text, type, repeat, tags, checklist, completed, 
-		nextDue, weeksOfMonth, yesterDaily, challenge, reminders, everyX, value, _id, notes, history
-	habits keys: attribute, counterUp, group, tags, down, text, challenge, counterDown, userId, up, 
-		value, id, priority, frequency, notes, updatedAt, _id, type, reminders, createdAt, history
-	rewards keys: attribute, group, tags, text, challenge, userId, value, id, priority, notes, updatedAt, 
-		_id, type, reminders, createdAt
-	completedTodos keys: attribute, dateCompleted, checklist, group, collapseChecklist, tags, text, 
-		challenge, userId, value, id, priority, completed, notes, updatedAt, _id, type, reminders, createdAt
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if taskType == None:
 		url = "https://habitica.com/api/v3/tasks/user"
 	else:
 		url = "https://habitica.com/api/v3/tasks/user?type=" + taskType
-	return(getUrl(url, creds))
+	return(getUrl(url, credentials))
 
-def createGroupTask(creds, groupId):
-	"""
-	Task - Create a new task belonging to a group
-	Can be passed an object to create a single task or an array of objects to create multiple tasks.
+def createGroupTask(credentials, groupId, data):
+	"""Create a new task belonging to a group.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group the new task(s) will belong to
+	Can be passed an object to create a single task or an array of objects to
+	create multiple tasks.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The id of the group the new task(s) will belong to.
+		data (dict): The data of the task to create. I don't have a way to test
+			this, so I have no idea what to use here.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
+
+	Todo:
+		I guess the payload needs to be a task object. I have no way to test
+		this. I think __dict__ of a task object would work.
 	"""
 	url = "https://habitica.com/api/v3/tasks/group/" + groupId
-	payload = {"groupId": groupId}
-	return(postUrl(url, creds, payload))
+	payload = data
+	return(postUrl(url, credentials, payload))
 
-def createTask(creds, text, taskType, tags = None, alias = None, attribute = None, collapseChecklist = False, 
-				notes = None, date = None, priority = 1, reminders = None, frequency = "weekly", repeat = True, 
-				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
-	"""
-	Task - Create a new task belonging to the user
-	Can be passed an object to create a single task or an array of objects to create multiple tasks.
+def createTask(credentials, text, taskType, tags = None, alias = None,
+		attribute = None, collapseChecklist = False, notes = None, date = None,
+		priority = 1, reminders = None, frequency = "weekly", repeat = True,
+		everyX = 1, streak = 0, startDate = None, up = True, down = True,
+		value = 0):
+	"""Create a new task belonging to the user.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	text: String. The text to be displayed for the task
-	taskType: String. Task type, options are: "habit", "daily", "todo", "reward".
-		Allowed values: "habit", "daily", "todo", "reward"
-	tags (optional): String[]. Array of UUIDs of tags
-	alias (optional): String. Alias to assign to task
-	attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
-		Allowed values: "str", "int", "per", "con"
-	collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
-		Default value: false
-	notes (optional): String. Extra notes
-	date (optional): String. Due date to be shown in task list. Only valid for type "todo."
-	priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
-		Default value: 1
-		Allowed values: "0.1", "1", "1.5", "2"
-	reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
-		For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
-	frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
-		Only valid for type "daily".
-		Default value: weekly
-		Allowed values: "weekly", "daily"
-	repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
-		Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
-		Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
-		Default value: true
-	everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
-		available again.
-		Default value: 1
-	streak (optional): Number. Number of days that the task has consecutively been checked off. 
-		Only valid for type "daily"
-		Default value: 0
-	startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
-	up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
-		"Good habits."
-		Default value: true
-	down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
-		"Bad habits."
-		Default value: true
-	value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
-		Default value: 0
+	Can be passed an object to create a single task or an array of objects to
+	create multiple tasks. TODO: Support this feature.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		text (str): The text to be displayed for the task.
+		taskType (str): Task type.
+			Allowed values: "habit", "daily", "todo", "reward"
+		tags (str[]): Optional. Array of UUIDs of tags.
+		alias (str): Optional. Alias to assign to task.
+		attribute (str): Optional. User's attribute to use.
+			Allowed values: "str", "int", "per", "con"
+		collapseChecklist (bool): Optional. Determines if a checklist will be
+			displayed.
+			Default value: false
+		notes (str): Optional. Extra notes.
+		date (str): Optional. Due date to be shown in task list. Only valid for
+			type "todo."
+		priority (float): Optional. Difficulty, options are 0.1, 1, 1.5, 2;
+			eqivalent of Trivial, Easy, Medium, Hard.
+			Default value: 1
+			Allowed values: "0.1", "1", "1.5", "2"
+		reminders (str[]): Optional. Array of reminders, each an object that
+		 	must include: a UUID, startDate and time.
+			Example: {"id":"ed427623-9a69-4aac-9852-13deb9c190c3",
+				"startDate":"1/16/17","time":"1/16/17" }
+		frequency (str): Optional. Value "weekly" enables "On days of the week",
+			value "daily" enables "EveryX Days". Only valid for type "daily".
+			Default value: weekly
+			Allowed values: "weekly", "daily"
+		repeat (dict[]): Optional. List of objects for days of the week, Days
+			that are true will be repeated upon. Only valid for type "daily".
+			Any days not specified will be marked as true. Days are: su, m, t,
+			w, th, f, s. Value of frequency must be "weekly". For example, to
+			skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
+			Default value: true
+		everyX (int): Optional. The number of days until this daily task is
+			available again. Value of frequency must be "daily".
+			Default value: 1
+		streak (int): Optional. Number of days that the task has consecutively
+			been checked off. Only valid for type "daily".
+			Default value: 0
+		startDate (str): Optional. Date when the task will first become
+			available. Only valid for type "daily".
+		up (bool): Optional. Only valid for type "habit." If true, enables the
+			"+" under "Directions/Action" for "Good habits."
+			Default value: true
+		down (bool): Optional. Only valid for type "habit." If true, enables
+			the "-" under "Directions/Action" for "Bad habits."
+			Default value: true
+		value (float): Optional. Only valid for type "reward." The cost in gold
+			of the reward.
+			Default value: 0
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
+
+	Todo:
+		Test the optional arguments.
 	"""
 	url = "https://habitica.com/api/v3/tasks/user"
-	payload = {"text": text, "type": taskType} 
+	payload = {"text": text, "type": taskType}
 	if tags != None:
 		payload["tags"] = tags
 	if alias != None:
@@ -644,258 +1156,380 @@ def createTask(creds, text, taskType, tags = None, alias = None, attribute = Non
 		payload["down"] = down
 	if value != 0:
 		payload["value"] = value
-	return(postUrl(url, creds, payload))
+	return(postUrl(url, credentials, payload))
 
-def deleteChecklist(creds, taskId, itemId):
-	"""
-	Task - Delete a checklist item from a task
+def deleteChecklist(credentials, taskId, itemId):
+	"""Delete a checklist item from a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	itemId: The checklist item _id
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		itemId (str): The checklist item id.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist/" + itemId
-	return(deleteUrl(url, creds))
+	return(deleteUrl(url, credentials))
 
-def removeTag(creds, taskId, tagId):
-	"""
-	Task - Delete a tag from a task
+def removeTag(credentials, taskId, tagId):
+	"""Delete a tag from a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	tagId: The tag id
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		tagId (str): The tag id.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/tags/" + tagId
-	return(deleteUrl(url, creds))
+	return(deleteUrl(url, credentials))
 
-def deleteTask(creds, taskId):
-	"""
-	Task - Delete a task given its id
+def deleteTask(credentials, taskId):
+	"""Delete a task given its id.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId
-	return(deleteUrl(url, creds))
+	return(deleteUrl(url, credentials))
 
-def clearCompletedTodos(creds):
-	"""
-	Task - Delete user's completed todos
+def clearCompletedTodos(credentials):
+	"""Delete user's completed todos.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/clearCompletedTodos"
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def getChallengeTasks(creds, challengeId, taskType = None):
-	"""
-	Task - Get a challenge's tasks
+def getChallengeTasks(credentials, challengeId, taskType = None):
+	"""Get a challenge's tasks.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The id of the challenge from which to retrieve the tasks
-	taskType (optional)	Query parameter to return just a type of tasks
-		Allowed values: "habits", "dailys", "todos", "rewards"
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The id of the associated challenge.
+		taskType (str) Optional. Filter returned object to one type of task.
+			Allowed values: "habits", "dailys", "todos", "rewards".
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if taskType == None:
 		url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId
 	else:
 		url = "https://habitica.com/api/v3/tasks/challenge/" + challengeId + "?type=" + taskType
-	return(getUrl(url, creds))
+	return(getUrl(url, credentials))
 
-def getGroupApprovals(creds, groupId):
-	"""
-	Task - Get a group's approvals
+def getGroupApprovals(credentials, groupId):
+	"""Get a group's approvals.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group from which to retrieve the approvals
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The id of the group from which to retrieve the approvals.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/approvals/group/" + groupId
-	return(getUrl(url, creds))
+	return(getUrl(url, credentials))
 
-def getGroupTasks(creds, groupId, taskType = None):
-	"""
-	Task - Get a group's tasks
+def getGroupTasks(credentials, groupId, taskType = None):
+	"""Get a group's tasks.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group from which to retrieve the approvals
-	taskType(optional): Query parameter to return just a type of tasks
-		Allowed values: "habits", "dailys", "todos", "rewards"
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The id of the group from which to retrieve the approvals.
+		taskType (str) Optional. Filter returned object to one type of task.
+			Allowed values: "habits", "dailys", "todos", "rewards".
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if taskType == None:
 		url = "https://habitica.com/api/v3/tasks/group/" + groupId
 	else:
 		url = "https://habitica.com/api/v3/tasks/group/" + groupId + "?type=" + taskType
-	return(getUrl(url, creds))
+	return(getUrl(url, credentials))
 
-def getTask(creds, taskId):
-	"""
-	Task - Get a task
+def getTask(credentials, taskId):
+	"""Get a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId
-	return(getUrl(url, creds))
+	return(getUrl(url, credentials))
 
-def needsWork(creds, taskId, userId):
-	"""
-	Task - Group task needs more work
-	Mark an assigned group task as needeing more work before it can be approved
+def needsWork(credentials, taskId, userId):
+	"""Group task needs more work.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	userId: The id of the assigned user
+	Mark an assigned group task as needeing more work before it can be approved.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		userId (str): The id of the assigned user.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/needs-work/" + userId
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def moveGroupTask(creds, groupId, taskId, position):
-	"""
-	Task - Move a group task to a specified position
-	Moves a group task to a specified position
+def moveGroupTask(credentials, groupId, taskId, position):
+	"""Move a group task to a specified position.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	groupId: The id of the group from which to retrieve the approvals
-	taskId: The task _id or alias
-	position: Where to move the task (-1 means push to bottom). First position is 0
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		groupId (str): The id of the group from which to retrieve the approvals.
+		taskId (str): The task id or alias.
+		position (int): Where to move the task (-1 means push to bottom). First
+			position is 0.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/group/" + groupId + "/tasks/" + taskId + "/move/to/" + str(position)
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def moveTask(creds, taskId, position):
-	"""
-	Task - Move a task to a new position
-	Note: completed To-Dos are not sortable, do not appear in user.tasksOrder.todos, and are ordered by date of 
-	completion.
+def moveTask(credentials, taskId, position):
+	"""Move a task to a new position.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	position: Where to move the task (-1 means push to bottom). First position is 0
+	Note:
+		Completed To-Dos are not sortable, do not appear
+		in user.tasksOrder.todos, and are ordered by date of completion.
+
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		position (int): Where to move the task (-1 means push to bottom). First
+			position is 0.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/move/to/" + str(position)
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def scoreChecklist(creds, taskId, itemId):
-	"""
-	Task - Score a checklist item
+def scoreChecklist(credentials, taskId, itemId):
+	"""Score a checklist item.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	itemId: The checklist item _id
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		itemId (str): The checklist item id.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist/" + itemId + "/score"
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def scoreTask(creds, taskId, direction):
-	"""
-	Task - Score a task
+def scoreTask(credentials, taskId, direction):
+	"""Score a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	direction: The direction for scoring the task. Allowed values: "up", "down"
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		direction (str): The direction for scoring the task.
+			Allowed values: "up", "down".
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/score/" + direction
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def unassignTask(creds, taskId, assignedUserId):
-	"""
-	Task - Unassign a user from a task
-	Unassigns a user to from a group task
+def unassignTask(credentials, taskId, assignedUserId):
+	"""Unassign a user from a group task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	assignedUserId: The id of the user that will be unassigned from the task
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		assignedUserId (str): The id of the user that will be unassigned from
+			the task.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/unassign/" + assignedUserId
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def unlinkTask(creds, taskId, keep):
-	"""
-	Task - Unlink a challenge task
+def unlinkTask(credentials, taskId, keep):
+	"""Unlink a challenge task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	keep: Specifies if the task should be kept(keep) or removed(remove)
-		Allowed values: 'keep', 'remove'
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		keep (str): Optional. Specifies if the task should be kept or removed.
+			Allowed values: 'keep', 'remove'.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/unlink-one/" + taskId + "?keep=" + keep
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def unlinkTasks(creds, challengeId, keep=None):
-	"""
-	Task - Unlink a challenge task
+def unlinkTasks(credentials, challengeId, keep=None):
+	"""Unlink a challenge task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	challengeId: The challenge _id
-	keep (optional): Specifies if tasks should be kept(keep-all) or removed(remove-all) after the unlink 
-		Allowed values: 'keep-all', 'remove-all'
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		challengeId (str): The challenge id.
+		keep (str): Optional. Specifies if the task should be kept or removed.
+			Allowed values: 'keep', 'remove'.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	if keep == None:
 		url = "https://habitica.com/api/v3/tasks/unlink-all/" + challengeId
 	else:
 		url = "https://habitica.com/api/v3/tasks/unlink-all/" + challengeId + "?keep=" + keep
-	return(postUrl(url, creds))
+	return(postUrl(url, credentials))
 
-def updateChecklist(creds, taskId, itemId, text):
-	"""
-	Task - Unassign a user from a task
-	Unassigns a user to from a group task
+def updateChecklist(credentials, taskId, itemId, text):
+	"""Update a checklist item.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	itemId: The checklist item _id
-	text: The text that will replace the current checkitem text.
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		itemId (str): The checklist item id.
+		text (str): The text that will replace the current checkitem text.
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId + "/checklist/" + itemId
 	payload = {"text": text}
-	return(putUrl(url, creds, payload))
+	return(putUrl(url, credentials, payload))
 
-def updateTask(creds, taskId, text = None, attribute = None, collapseChecklist = False, notes = None, 
-				date = None, priority = 1, reminders = None, frequency = "weekly", repeat = True, 
-				everyX = 1, streak = 0, startDate = None, up = True, down = True, value = 0):
-	"""
-	Task - Update a task
+def updateTask(credentials, taskId, text = None, attribute = None,
+		collapseChecklist = False, notes = None, date = None, priority = 1,
+		reminders = None, frequency = "weekly", repeat = True, everyX = 1,
+		streak = 0, startDate = None, up = True, down = True, value = 0):
+	"""Update a task.
 
-	creds: a dictionary of user credentials formatted as: {'x-api-user': 'your_user_id', 'x-api-key': 'your_api_key'}
-	taskId: The task _id or alias
-	text: String (optional). The text to be displayed for the task
-	attribute (optional): String. User's attribute to use, options are: "str", "int", "per", "con"
-		Allowed values: "str", "int", "per", "con"
-	collapseChecklist (optional): Boolean. Determines if a checklist will be displayed
-		Default value: false
-	notes (optional): String. Extra notes
-	date (optional): String. Due date to be shown in task list. Only valid for type "todo."
-	priority (optional): Number. Difficulty, options are 0.1, 1, 1.5, 2; eqivalent of Trivial, Easy, Medium, Hard.
-		Default value: 1
-		Allowed values: "0.1", "1", "1.5", "2"
-	reminders (optional): String[]. Array of reminders, each an object that must include: a UUID, startDate and time. 
-		For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3","startDate":"1/16/17","time":"1/16/17" }
-	frequency (optional): String. Value "weekly" enables "On days of the week", value "daily" enables "EveryX Days". 
-		Only valid for type "daily".
-		Default value: weekly
-		Allowed values: "weekly", "daily"
-	repeat (optional): String. List of objects for days of the week, Days that are true will be repeated upon. 
-		Only valid for type "daily". Any days not specified will be marked as true. Days are: su, m, t, w, th, f, s. 
-		Value of frequency must be "weekly". For example, to skip repeats on Mon & Fri: "repeat":{"f":false,"m":false}
-		Default value: true
-	everyX (optional): Number. Value of frequency must be "daily", the number of days until this daily task is 
-		available again.
-		Default value: 1
-	streak (optional): Number. Number of days that the task has consecutively been checked off. 
-		Only valid for type "daily"
-		Default value: 0
-	startDate (optional): Date. Date when the task will first become available. Only valid for type "daily"
-	up (optional): Boolean. Only valid for type "habit." If true, enables the "+" under "Directions/Action" for 
-		"Good habits."
-		Default value: true
-	down (optional): Boolean. Only valid for type "habit." If true, enables the "-" under "Directions/Action" for 
-		"Bad habits."
-		Default value: true
-	value (optional): Number. Only valid for type "reward." The cost in gold of the reward.
-		Default value: 0
+	Args:
+		credentials (dict): Formatted dictionary of user id and api key. If a
+			user object has already been created, use user.credentials.
+			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
+		taskId (str): The task id or alias.
+		text (str): Optional. The text to be displayed for the task.
+		attribute (str): Optional. User's attribute to use.
+			Allowed values: "str", "int", "per", "con".
+		collapseChecklist (bool): Optional. Determines if a checklist will be
+			displayed.
+			Default value: false
+		notes (str): Optional. Extra notes.
+		date (str): Optional. Due date to be shown in task list. Only valid for
+			type "todo."
+		priority (float): Optional. Difficulty, options are 0.1, 1, 1.5, 2;
+			eqivalent of Trivial, Easy, Medium, Hard.
+			Default value: 1
+			Allowed values: "0.1", "1", "1.5", "2"
+		reminders (str[]): Optional. Array of reminders, each an object that
+			must include: a UUID, startDate and time.
+			For example {"id":"ed427623-9a69-4aac-9852-13deb9c190c3",
+				"startDate":"1/16/17","time":"1/16/17" }
+		frequency (str): Optional. Value "weekly" enables "On days of the week",
+			value "daily" enables "EveryX Days". Only valid for type "daily".
+			Default value: weekly
+			Allowed values: "weekly", "daily"
+		repeat (str): Optional. List of objects for days of the week, Days that
+			are true will be repeated upon. Only valid for type "daily". Any
+			days not specified will be marked as true. Days are: su, m, t, w,
+			th, f, s. Value of frequency must be "weekly". For example, to skip
+			repeats on Mon & Fri: "repeat":{"f":false,"m":false}
+			Default value: true
+		everyX (int): Optional. Value of frequency must be "daily", the number
+			of days until this daily task is available again.
+			Default value: 1
+		streak (int): Optional. Number of days that the task has consecutively
+			been checked off. Only valid for type "daily".
+			Default value: 0
+		startDate (str): Optional. Date when the task will first become
+			available. Only valid for type "daily".
+		up (bool): Optional. Only valid for type "habit." If true, enables the
+			"+" under "Directions/Action" for "Good habits."
+			Default value: true
+		down (bool): Optional. Only valid for type "habit." If true, enables the
+			"-" under "Directions/Action" for "Bad habits."
+			Default value: true
+		value (float): Optional. Only valid for type "reward." The cost in gold
+			of the reward.
+			Default value: 0
+
+	Returns:
+		A JSON response object.
+		Keys: userV, notifications, data, appVersion, success.
 	"""
 	url = "https://habitica.com/api/v3/tasks/" + taskId
-	payload = {} 
+	payload = {}
 	if text != None:
 		payload["text"] = text
 	if attribute != None:
@@ -926,4 +1560,4 @@ def updateTask(creds, taskId, text = None, attribute = None, collapseChecklist =
 		payload["down"] = down
 	if value != 0:
 		payload["value"] = value
-	return(putUrl(url, creds, payload))
+	return(putUrl(url, credentials, payload))
