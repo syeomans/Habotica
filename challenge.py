@@ -27,9 +27,6 @@ class challenge:
 			default: None
 
 	Attributes:
-		credentials (dict): Formatted dictionary of user id and api key. If a
-			user object has already been created, use user.credentials.
-			format: {'x-api-user': "user_id_here", 'x-api-key': "api_key_here"}
 		group (group): The group associated with the challenge. See "Group"
 			documentation for details.
 		prize (int): Number of gems awarded to the winner of the challenge.
@@ -56,7 +53,6 @@ class challenge:
 		if data == None:
 			data = getChallenge(credentials, challengeId)['data']
 
-		self.credentials = credentials
 		self.group = group(credentials, data['group']['id'], data['group']) if 'group' in data.keys() else None
 
 		self.prize = data['prize'] if 'prize' in data.keys() else None
@@ -98,7 +94,7 @@ class challenge:
 		"""
 		return(str(self.__dict__))
 
-	def deleteChallenge(self):
+	def deleteChallenge(self, credentials):
 		"""Deletes a challenge.
 
 		Returns:
@@ -106,9 +102,9 @@ class challenge:
 			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id
-		return(deleteUrl(url, self.credentials))
+		return(deleteUrl(url, credentials))
 
-	def exportChallenge(self):
+	def exportChallenge(self, credentials):
 		"""Exports a challenge in CSV.
 
 		Returns:
@@ -116,9 +112,9 @@ class challenge:
 			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id + "/export/csv"
-		return(getUrl(url, self.credentials))
+		return(getUrl(url, credentials))
 
-	def selectChallengeWinner(self, winnerId):
+	def selectChallengeWinner(self, credentials, winnerId):
 		"""Selects a winner for a challenge.
 
 		Args:
@@ -129,9 +125,9 @@ class challenge:
 			Keys: userV, notifications, data, appVersion, success.
 		"""
 		url = "https://habitica.com/api/v3/challenges/" + self.id + "/selectWinner/" + winnerId
-		return(postUrl(url, self.credentials))
+		return(postUrl(url, credentials))
 
-	def updateChallenge(self, name = "", summary = "", description = "", leader = ""):
+	def updateChallenge(self, credentials, name = "", summary = "", description = "", leader = ""):
 		"""Updates challenge info.
 
 		Updates the name, description, or leader of a challenge. User must be
@@ -159,7 +155,7 @@ class challenge:
 		if leader != "":
 			payload["leader"] = leader
 
-		return(putUrl(url, self.credentials, payload))
+		return(putUrl(url, credentials, payload))
 
 def createChallenge(creds, groupId, name, shortName, summary = " ", description = " ", prize = 0):
 	"""Creates a new challenge.
