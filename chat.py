@@ -72,7 +72,7 @@ class message:
 
 		Prints message object's attributes as a dictionary.
 		"""
-		return(str(self.__dict__))
+		return(self.text)
 
 	def clearFlags(self):
 		"""Reset the flag count on a message.
