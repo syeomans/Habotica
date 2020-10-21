@@ -1,3 +1,11 @@
+"""User class and API functions
+
+This module contains class definitions for Habitica users. Each function
+makes a call to Habitica's V3 API and the custom classes handle Habitica's
+JSON objects pythonically.
+
+See https://habitica.com/apidoc/ for Habitica's API documentation.
+"""
 from Habotica.urlFunctions import getUrl, postUrl, putUrl, deleteUrl
 from Habotica.task import task, habit, daily, todo, reward, completedTodo, getTasks, getTaskList
 from Habotica.chat import chat, getChat
@@ -6,10 +14,135 @@ from Habotica.challenge import challenge, getChallenges
 import json
 
 class user:
-	"""
-	Class of User objects.
+	"""Class of User objects.
 
-	All functions in the User section of the API docs are supported as of 12/31/2018
+	Args:
+		userId (str): The user's UUID. You can find this on Habitica.com
+			under settings>API.
+		apiKey (str): The user's API key. You can find this on Habitica.com
+			under settings>API.
+
+	Attributes:
+		userId (str): The user's UUID.
+		apiKey (str): The user's API key.
+		credentials (dict): A dictionary containing the user's userId and
+			apiKey. Useful for other functions in this library that require
+			credentials.
+		_id (str): The user's UUID.
+		authenticatedProfile (dict): The user's authenticated profile. All of
+			the attributes listed below come from here.
+			keys (str): auth, achievements, backer, contributor, purchased,
+			flags, history, items, invitations, party, preferences, profile,
+			stats, inbox, tasksOrder, _v, balance, challenges, guilds,
+			loginIncentives, invitesSent, pinnedItemsOrder, _id, _ABtest,
+			webhooks, pushDevices, tags, notifications, newMessages, lastCron,
+			_ABTests, migration, pinnedItems, unpinnedItems, extra, id,
+			needsCron
+			TODO:
+				Add auth, backer, contributor, purchased,
+				preferences
+		userV (int): 
+		notifications
+		name (str): The users display name. 									TODO: Is this the display name?
+		guildIds
+		blurb (str): The "About" section on the user's profile.
+		challengeIds
+		inbox
+		lastCron
+		training
+		str
+		int
+		per
+		con
+		gp
+		hp
+		maxHP
+		mp
+		maxMP
+		exp
+		lvl
+		toNextLevel
+		buffs
+		rpgclass
+		points
+		asleep
+		wearingCostume
+		shirt
+		chair
+		hair
+		skin
+		size
+		background
+		dayStart
+		pinnedItems
+		habits
+		dailys
+		todos
+		rewards
+		needsCron
+		achievements
+		pinnedItemsOrder
+		invitations
+		unpinnedItems
+		lastLogin
+		dateCreated
+		username
+		email
+		webhooks
+		loginIncentives
+		hatchingPotions
+		pets
+		mounts
+		currentPet
+		currentMount
+		costumeBack
+		costumeBody
+		costumeHead
+		costumeShield
+		costumeArmor
+		costumeWeapon
+		costumeHeadAccessory
+		costumeEyewear
+		equippedBack
+		equippedBody
+		equippedHead
+		equippedShield
+		equippedArmor
+		equippedWeapon
+		equippedHeadAccessory
+		equippedEyewear
+		ownedGear
+		lastDrop
+		food
+		eggs
+		quests
+		partyQuest
+		specialItems
+		flags
+		pushDevices
+		invitesSent
+		balance
+		todosHistory
+		expHistory
+		party
+		partyId
+		habitOrder
+		dailyOrder
+		todoOrder
+		rewardOrder
+		tags
+		tagIdToNameDict
+		tagNameToIdDict
+		habits
+		dailys
+		todos
+		rewards
+		completedTodos
+		partyChat
+		guildChats
+		challenges
+		guilds
+
 	"""
 	def __init__(self, userId, apiKey):
 
@@ -21,7 +154,7 @@ class user:
 		### Properties from authenticated profile
 		response = self.getAuthenticatedProfile()
 		self._id = response['data']['_id']
-		self.authenticatedProfile = response
+		self.authenticatedProfile = response['data']
 		self.userV = response['userV']
 		self.notifications = response['notifications']
 		self.name = response['data']['profile']['name']
